@@ -704,8 +704,9 @@ pre.letter{border-radius:6px}
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="d-title" hidden></aside>
 
 <!-- Libraries: cdnjs first, jsDelivr as a backup if cdnjs is blocked or down -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script>window.XLSX||document.write('<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>')</script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+<script>window.XLSX||document.write('<script src="lib/xlsx-0.20.3.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT"><\/script>')</script>
+<script>window.XLSX||document.write('<script src="https://cdn.jsdelivr.net/npm/@e965/xlsx@0.20.3/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"><\/script>')</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>window.JSZip||document.write('<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"><\/script>')</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -951,6 +952,14 @@ function match(code,desc){
   if(best)return {pid:best.k,method:'description',kw:best.w,conf:P[best.k].kconf||0.86};
   return {pid:null,method:'none',conf:0};
 }
+// Standard version in a record or clause: 'A1', 'A2', or '' when it is not stated
+const stdVer=s=>{const m=/15804\s*\+\s*A([12])/i.exec(s||'');return m?'A'+m[1]:'';};
+// 'pep' (PEP rules apply), 'ok', 'unknown' (version not stated) or 'wrong'
+function stdResult(e,R){if(/PEP/.test(e.std))return 'pep';const need=stdVer(R.std),have=stdVer(e.std);if(!need||have===need||(need==='A1'&&have==='A2'))return 'ok';return have?'wrong':'unknown';}
+// An expiry date we estimated is never treated as a real date
+const knownUntil=e=>e.until&&!e.untilNote?e.until:null;
+// Match confidence shown to people: a level, never a percentage
+function confLevel(l){if(l.method==='code'||l.method==='alternative'||l.confirmed)return 'High';return l.conf>=0.9?'Medium':'Low';}
 function evaluate(l,R){
   const p=l.pid?P[l.pid]:null,e=p&&p.epd;
   const checks=[];
@@ -961,15 +970,18 @@ function evaluate(l,R){
   else if(l.method==='code')add('yes','Exact '+lc(l.kind)+' match');
   else if(l.method==='alternative')add('yes','Alternative product chosen by the reviewer');
   else if(l.confirmed)add('yes','Description match confirmed by the reviewer');
-  else add('q','Description match at '+Math.round(l.conf*100)+'%, not confirmed');
+  else add('q','Description match, '+confLevel(l)+' confidence, not confirmed');
   if(e){
     add(e.ver||!R.ver?'yes':'no',R.ver?(e.ver?'Third-party verified':'Not third-party verified'):'Verification not required');
-    const pep=/PEP/.test(e.std);
-    add(pep&&!R.pep?'no':'yes',pep?(R.pep?'PEP ecopassport accepted for this bid':'PEP ecopassport not accepted for this bid'):'Standard: '+e.std);
+    const sr=stdResult(e,R);
+    if(sr==='pep')add(R.pep?'yes':'no',R.pep?'PEP ecopassport accepted for this bid':'PEP ecopassport not accepted for this bid');
+    else if(sr==='ok')add('yes','Standard: '+e.std+(stdVer(R.std)?', meets '+R.std:''));
+    else if(sr==='wrong')add('no','Standard: '+e.std+'; the client requires '+R.std);
+    else add(l.stdChecked?'yes':'q',l.stdChecked?'Standard version confirmed as '+R.std+' by the reviewer':'Standard: '+e.std+', version (+A1 or +A2) not stated; the client requires '+R.std);
     if(e.type==='generic')add('no','Generic data only, not an EPD');
     else if(e.type==='industry')add(R.spec?'q':'yes',R.spec?'Industry-average EPD; the client asks for product-specific':'Industry-average EPD accepted for this bid');
     else add('yes','Product-specific EPD');
-    if(!e.until)add(l.validityChecked?'yes':'q',l.validityChecked?'Validity checked at the source by the reviewer':'Expiry date not recorded; check that it covers delivery on '+dmy(R.del));
+    if(!knownUntil(e))add(l.validityChecked?'yes':'q',l.validityChecked?'Validity checked at the source by the reviewer':e.untilNote?'Validity estimated: '+e.untilNote+'. Check that it covers delivery on '+dmy(R.del):'Expiry date not recorded; check that it covers delivery on '+dmy(R.del));
     else if(e.until<TODAY)add('no','Expired '+validTxt(e));
     else if(e.until<R.del)add('no','Valid until '+validTxt(e)+', before delivery on '+dmy(R.del));
     else add('yes','Valid until '+validTxt(e)+', after delivery on '+dmy(R.del));
@@ -984,12 +996,15 @@ function evaluate(l,R){
   if(e.type==='generic')return Object.assign(base,{s:'missing',t:'Generic data only',why:'Only a generic dataset exists. It is not accepted as an EPD.',next:'Request a product-specific EPD'});
   if(R.ver&&!e.ver)return Object.assign(base,{s:'missing',t:'Not verified',why:'The EPD is not third-party verified.',next:'Request a verified EPD'});
   if(/PEP/.test(e.std)&&!R.pep)return Object.assign(base,{s:'missing',t:'Format not accepted',why:'This is a PEP ecopassport, and the client does not accept PEP for this bid.',next:'Request an EPD to '+R.std});
-  if(e.until&&e.until<TODAY)return Object.assign(base,{s:'expired',t:'Expired',why:'The EPD expired '+validTxt(e)+'.',next:p.alt&&l.pid===l.origPid?(p.altLabel||'Use the suggested alternative'):'Request the renewed EPD'});
-  if(e.until&&e.until<R.del)return Object.assign(base,{s:'expired',t:'Expires before delivery',why:'Valid until '+validTxt(e)+'; delivery is '+dmy(R.del)+'.',next:'Ask the supplier for the renewal date'});
+  if(stdResult(e,R)==='wrong')return Object.assign(base,{s:'missing',t:'Wrong standard version',why:'The EPD follows '+e.std+'; the client requires '+R.std+'.',next:'Request an EPD to '+R.std});
+  if(knownUntil(e)&&e.until<TODAY)return Object.assign(base,{s:'expired',t:'Expired',why:'The EPD expired '+validTxt(e)+'.',next:p.alt&&l.pid===l.origPid?(p.altLabel||'Use the suggested alternative'):'Request the renewed EPD'});
+  if(knownUntil(e)&&e.until<R.del)return Object.assign(base,{s:'expired',t:'Expires before delivery',why:'Valid until '+validTxt(e)+'; delivery is '+dmy(R.del)+'.',next:'Ask the supplier for the renewal date'});
   const open=[];
-  if(l.method==='description'&&!l.confirmed)open.push(['Match not confirmed','Matched on the description at '+Math.round(l.conf*100)+'% confidence.','Confirm the product match']);
+  if(l.method==='description'&&!l.confirmed)open.push(['Match not confirmed','Matched on the description, '+confLevel(l)+' confidence.','Confirm the product match']);
   if(e.type==='industry'&&R.spec)open.push(['Industry-average EPD','The client asks for product-specific EPDs; an industry average needs their approval.',p.alt&&l.pid===l.origPid?'Use the product-specific alternative':'Ask the client in Q&A']);
   if(!e.until&&!l.validityChecked)open.push(['Validity not confirmed','The expiry date is not recorded ('+e.ut+').','Check validity at the source']);
+  else if(e.untilNote&&!l.validityChecked)open.push(['Validity estimated','The expiry date is an estimate ('+e.ut+'), not read from the EPD.','Check validity at the source']);
+  if(stdResult(e,R)==='unknown'&&!l.stdChecked)open.push(['Standard version not stated','The EPD says '+e.std+' without +A1 or +A2; the client requires '+R.std+'.','Confirm +A1 or +A2 in the EPD']);
   if(e.convAssumed&&!l.convOk)open.push(['Conversion assumed',e.convNote+'.','Confirm the unit conversion']);
   if(open.length)return Object.assign(base,{s:'review',t:open[0][0],why:open.map(o=>o[1]).join(' '),next:open[0][2],open});
   return Object.assign(base,{s:'ready',t:'Ready',why:'Every requirement passes.',next:'—'});
@@ -1146,7 +1161,7 @@ async function runReading(){
     for(const l of L){if(!alive())return;
       const p=l.pid?P[l.pid]:null;
       if(l.method==='code')nc++;else if(l.method==='description')nd++;else nn++;
-      log(lnum(l.n)+' '+esc(l.desc)+' → '+(p?(p.generic?'product type only, no product named':'<b>'+esc(p.brand)+'</b> ('+(l.method==='code'?esc(l.kind):'description '+Math.round(l.conf*100)+'%')+')'):'no match'));
+      log(lnum(l.n)+' '+esc(l.desc)+' → '+(p?(p.generic?'product type only, no product named':'<b>'+esc(p.brand)+'</b> ('+(l.method==='code'?esc(l.kind):'description, '+confLevel(l)+' confidence')+')'):'no match'));
       set(1,'on',(nc+nd+nn)+' of '+L.length+' · '+nc+' by exact code · '+nd+' by description');
       prog(.25+.25*(l.n/L.length));await w(per);}
     set(1,'done',nc+' by exact code · '+nd+' by description'+(nn?' · '+nn+' not found':''));
@@ -1200,7 +1215,7 @@ function renderReview(){
   $('#rv-hero').innerHTML='<div class="hero"><p class="hero-h">EPDs found for <b>'+found+' of '+st.lines.length+'</b> lines</p><p class="hero-s">'+bits.join(' · ')+'</p>'+(st.checkSec?'<p class="hero-t">Checked in '+st.checkSec+' seconds. By hand, '+st.lines.length+' lines take about '+fmt(st.lines.length*15/60,1)+' hours (15 minutes a line, our estimate).</p>':'')+'</div>';
   const sug=suggested(),sg=$('#rv-suggest');
   sg.hidden=!sug.length;
-  sg.innerHTML=sug.length?'<div class="panel suggest"><div class="row" style="justify-content:space-between;align-items:flex-start"><div style="display:grid;gap:4px;max-width:72ch"><h2>Confirm '+sug.length+' suggested match'+(sug.length>1?'es':'')+'</h2><p class="small muted">These lines were matched on the description at 90% or more. Check the pairs, then confirm them together. Lower matches stay for one-by-one review.</p></div><button class="btn" data-act="confirm-suggested">Confirm all '+sug.length+'</button></div><details class="sugpairs"><summary class="small" style="cursor:pointer;font-weight:600;color:var(--accent)">Show the '+sug.length+' pairs</summary><div class="tablebox" style="margin-top:10px"><table class="sugtable"><thead><tr><th scope="col">Line</th><th scope="col">In the bid</th><th scope="col">Matched product</th><th scope="col" class="num">Match</th></tr></thead><tbody>'+sug.map(l=>'<tr><td class="mono">'+lnum(l.n)+'</td><td>'+esc(l.desc)+'</td><td>'+esc(prodName(P[l.pid]))+'</td><td class="num mono">'+Math.round(l.conf*100)+'%</td></tr>').join('')+'</tbody></table></div></details></div>':'';
+  sg.innerHTML=sug.length?'<div class="panel suggest"><div class="row" style="justify-content:space-between;align-items:flex-start"><div style="display:grid;gap:4px;max-width:72ch"><h2>Confirm '+sug.length+' suggested match'+(sug.length>1?'es':'')+'</h2><p class="small muted">These lines were matched on the description with Medium confidence. Check the pairs, then confirm them together. Low-confidence matches stay for one-by-one review.</p></div><button class="btn" data-act="confirm-suggested">Confirm all '+sug.length+'</button></div><details class="sugpairs"><summary class="small" style="cursor:pointer;font-weight:600;color:var(--accent)">Show the '+sug.length+' pairs</summary><div class="tablebox" style="margin-top:10px"><table class="sugtable"><thead><tr><th scope="col">Line</th><th scope="col">In the bid</th><th scope="col">Matched product</th><th scope="col" class="num">Match</th></tr></thead><tbody>'+sug.map(l=>'<tr><td class="mono">'+lnum(l.n)+'</td><td>'+esc(l.desc)+'</td><td>'+esc(prodName(P[l.pid]))+'</td><td class="num">'+confLevel(l)+'</td></tr>').join('')+'</tbody></table></div></details></div>':'';
   $('#tiles').innerHTML=
     tile('expired','Caught before submission')+
     tile('missing','Each with a next step')+
@@ -1234,7 +1249,7 @@ function matchHTML(l){
   if(P[l.pid].generic)return '<span class="mt none">'+I.missing+'Type only</span><span class="sub">No product named in the bid</span>';
   if(l.method==='code')return '<span class="mt exact">'+I.check+'Exact code</span><span class="sub">'+esc(l.kind)+' <span class="mono">'+esc(l.code)+'</span></span>';
   if(l.method==='alternative')return '<span class="mt alt">Alternative</span><span class="sub">Chosen by the reviewer</span>';
-  return l.confirmed?'<span class="mt exact">'+I.check+'Description</span><span class="sub">Confirmed by the reviewer ('+Math.round(l.conf*100)+'%)</span>':'<span class="mt unsure">'+I.q.replace('class="ic q"','class="ic"')+'Description, '+Math.round(l.conf*100)+'%</span><span class="sub">Keyword "'+esc(l.kw)+'"; not confirmed</span>';
+  return l.confirmed?'<span class="mt exact">'+I.check+'Description</span><span class="sub">Confirmed by the reviewer</span>':'<span class="mt unsure">'+I.q.replace('class="ic q"','class="ic"')+'Description, '+confLevel(l)+'</span><span class="sub">Keyword "'+esc(l.kw)+'"; not confirmed</span>';
 }
 function rowHTML(l){
   const p=l.pid?P[l.pid]:null,e=p&&p.epd,ev=l._ev;
@@ -1277,7 +1292,7 @@ function renderDrawer(){
   h+='<section class="dsec"><h3>Product match</h3><dl class="ev">'+
     dd('Bid line',esc(l.desc)+' · <span class="mono">'+fmt(l.qty,l.qty%1?2:0)+'</span> '+esc(l.unit))+
     dd('Matched product',p?(p.generic?'None named. Recognised as: '+esc(p.name):esc(prodName(p))):'None')+
-    dd('How',!p?'No code match and no description keyword in the EPDesk library':p.generic?'Product type recognised from the keyword "'+esc(l.kw)+'"; the line names no product or code':l.method==='code'?'Exact '+esc(lc(l.kind))+' <span class="mono">'+esc(l.code)+'</span>':l.method==='alternative'?'Alternative chosen by the reviewer, replacing '+esc(P[l.origPid].brand+' '+P[l.origPid].name):'Description keyword "'+esc(l.kw)+'", '+Math.round(l.conf*100)+'% confidence; '+(l.confirmed?'confirmed by the reviewer':'not confirmed'))+
+    dd('How',!p?'No code match and no description keyword in the EPDesk library':p.generic?'Product type recognised from the keyword "'+esc(l.kw)+'"; the line names no product or code':l.method==='code'?'Exact '+esc(lc(l.kind))+' <span class="mono">'+esc(l.code)+'</span>':l.method==='alternative'?'Alternative chosen by the reviewer, replacing '+esc(P[l.origPid].brand+' '+P[l.origPid].name):'Description keyword "'+esc(l.kw)+'", '+confLevel(l)+' confidence; '+(l.confirmed?'confirmed by the reviewer':'not confirmed'))+
     '</dl></section>';
   // EPD record
   if(e){
@@ -1333,7 +1348,8 @@ function renderDrawer(){
     (ev.open||[]).forEach(o=>{
       if(o[0]==='Match not confirmed')acts.push('<button class="btn" data-act="confirm-match">Confirm this product</button>');
       if(o[0]==='Conversion assumed')acts.push('<button class="btn secondary" data-act="confirm-conv">Confirm the conversion</button>');
-      if(o[0]==='Validity not confirmed')acts.push('<button class="btn secondary" data-act="check-valid">Validity checked at source</button>');
+      if(o[0]==='Standard version not stated')acts.push('<button class="btn secondary" data-act="confirm-std">The EPD meets '+esc(R.std)+'</button>');
+      if(o[0]==='Validity not confirmed'||o[0]==='Validity estimated')acts.push('<button class="btn secondary" data-act="check-valid">Validity checked at source</button>');
     });
   }
   if(a)acts.push('<button class="btn'+(ev.s==='review'?' secondary':'')+'" data-act="use-alt">'+esc(p.altLabel||(p.generic?'Use the suggested product':'Use the alternative'))+'</button>');
@@ -1358,9 +1374,10 @@ function reqText(l){
   if(p&&p.generic)ask='Could you propose a product for this line that has a third-party verified EPD to '+R.std+(R.pep?' (PEP ecopassport is also accepted)':'')+', and send us the EPD?';
   else if(ev.t==='Expired')ask='Could you send us the renewed EPD? The version we have'+(e?' ('+e.id+')':'')+' expired '+(e?validTxt(e):'')+'.';
   else if(ev.t==='Expires before delivery')ask='Could you send us the renewed EPD, or the date it will be renewed? EPD '+(e?e.id:'')+' is valid until '+(e?validTxt(e):'')+' and our delivery is '+dmy(R.del)+'.';
+  else if(ev.t==='Wrong standard version')ask='Could you send us an EPD to '+R.std+'? The EPD we have'+(e?' ('+e.id+')':'')+' follows '+(e?e.std:'an older version')+'.';
   else if(ev.t==='Format not accepted')ask='Could you send us an EPD to '+R.std+'? The client does not accept PEP ecopassport for this bid.';
   else if(ev.t==='Excluded by reviewer'&&e&&e.type==='industry')ask='Could you send us a product-specific EPD? We only have an industry-average EPD ('+e.id+').';
-  else if(ev.t==='Excluded by reviewer'&&e&&!e.until)ask='Could you confirm that EPD '+e.id+' is still valid on '+dmy(R.del)+', or send us the current version?';
+  else if(ev.t==='Excluded by reviewer'&&e&&(stdResult(e,R)==='unknown'||!knownUntil(e))){const q=[];if(stdResult(e,R)==='unknown')q.push('whether it follows EN 15804+A1 or +A2 (the client requires '+R.std+')');if(!knownUntil(e))q.push('that it is still valid on '+dmy(R.del));ask='Could you confirm '+q.join(', and ')+' for EPD '+e.id+', or send us the current version?';}
   else if(ev.t==='No product match')ask='Could you help us identify this product and send its EPD?';
   else ask='Could you send us an EPD for this product?';
   return 'Subject: EPD request: '+prod+(m.quote?' ('+m.quote+')':'')+'\n\nHello'+(p&&!p.generic?' '+p.brand+' team':'')+',\n\n'+
@@ -1381,6 +1398,7 @@ function lineAction(act){
   else if(act==='unconfirm'){l.confirmed=false;}
   else if(act==='confirm-conv'){l.convOk=true;}
   else if(act==='check-valid'){l.validityChecked=true;}
+  else if(act==='confirm-std'){l.stdChecked=true;}
   else if(act==='use-alt'&&p&&p.alt){l.pid=p.alt;l.method='alternative';l.confirmed=true;l.reqOpen=false;}
   else if(act==='undo-alt'){l.pid=l.origPid;l.method=l.origMethod;l.confirmed=false;}
   else if(act==='exclude'){l.excluded='Left out by the reviewer: '+l._ev.t.toLowerCase()+'. A supplier request goes in the report.';}
@@ -1511,7 +1529,7 @@ function buildReport(){
     head:[['Line','Bid line and product','Match','EPD','Status','kg CO2e']],
     body:all.map(l=>{const p=l.pid?P[l.pid]:null,e=p&&p.epd;
       return [lnum(l.n),T(l.desc+' · '+fmt(l.qty,l.qty%1?2:0)+' '+l.unit+'\n'+prodName(p)),
-        T(!p?'None':l.method==='code'?'Exact '+l.kind:l.method==='alternative'?'Alternative (reviewer)':'Description '+Math.round(l.conf*100)+'%'+(l.confirmed?', confirmed':', not confirmed')),
+        T(!p?'None':l.method==='code'?'Exact '+l.kind:l.method==='alternative'?'Alternative (reviewer)':'Description, '+confLevel(l)+(l.confirmed?', confirmed':', not confirmed')),
         T(e?e.id+'\n'+TYPE[e.type]+' · '+opLabel(p)+'\n'+validLabel(e):'No EPD record'),
         T(STATUS[l._ev.s].label+(l._ev.s==='ready'||l._ev.t===STATUS[l._ev.s].label?'':': '+l._ev.t)),
         l._kg!=null?fmt(l._kg):'-'];}),
@@ -1714,7 +1732,7 @@ function view(v){
 window.addEventListener('hashchange',()=>view(location.hash==='#how'?'how':'check'));
 screen('upload');
 if(location.hash==='#how')view('how');
-window.__epdesk={st,openFile,loadSample};
+window.__epdesk={st,openFile,loadSample,evaluate};
 })();
 </script>
 
