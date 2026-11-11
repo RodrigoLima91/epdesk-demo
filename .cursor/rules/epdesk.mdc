@@ -6,15 +6,20 @@ alwaysApply: true
 
 # EPDesk invariants (full text in RULES.md)
 
-1. A line is Ready only after an exact code match (E-number, NOBB, GTIN, article number) or a reviewer's confirmation.
-2. An estimated or missing validity date is never Ready.
-3. The EPD's standard must meet the client's required standard (R.std). An EN 15804 record with no version stated is Needs review. +A1 under a +A2 clause is Missing.
-4. Do not add dependencies, change the visual design or touch unrelated code without asking.
-5. No customer files or customer data in the repository.
+A false Ready is the worst failure. A line is Ready only when all six pass:
+
+1. Right product: exact code or reviewer confirmation. Never a description match alone.
+2. Right EPD: range or average EPDs, superseded versions, unit differences and assumed conversions need a reviewer's check.
+3. Verified: generic data is not an EPD.
+4. Standard and version meet the client's clause. +A1 under +A2 is Missing; an unstated version is Needs review.
+5. Valid on the delivery date. An estimated or missing date is never Ready.
+6. Every requirement is confirmed. Defaults and assumptions block Ready.
 
 How to work here:
 
-- One change per request. Show the diff and list every status that changed.
+- This repository is the static demo: one `index.html`, no build step. It holds no rules.
+- Statuses, matching, requirements and coverage come from `lib/epdesk-rules-<version>.js`, built from the `@epdesk/rules` package. Change rules there, never here.
+- One change per request. After a change, load the sample bid and list every line whose status changed, before → after.
+- Stop and ask if a change touches the visual design or needs a new dependency.
 - Show confidence as High, Medium or Low, never as a percentage.
-- This repository is the static demo: one `index.html`, no build step. Rule changes start in the `@epdesk/rules` package and its tests.
-- After a change, load the sample bid and check every line's status before and after.
+- No customer data anywhere in the repository.
