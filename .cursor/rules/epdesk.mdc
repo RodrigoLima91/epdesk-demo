@@ -1,0 +1,20 @@
+---
+description: EPDesk invariants for matching and rules. Always apply.
+globs:
+alwaysApply: true
+---
+
+# EPDesk invariants (full text in RULES.md)
+
+1. A line is Ready only after an exact code match (E-number, NOBB, GTIN, article number) or a reviewer's confirmation.
+2. An estimated or missing validity date is never Ready.
+3. The EPD's standard must meet the client's required standard (R.std). An EN 15804 record with no version stated is Needs review. +A1 under a +A2 clause is Missing.
+4. Do not add dependencies, change the visual design or touch unrelated code without asking.
+5. No customer files or customer data in the repository.
+
+How to work here:
+
+- One change per request. Show the diff and list every status that changed.
+- Show confidence as High, Medium or Low, never as a percentage.
+- This repository is the static demo: one `index.html`, no build step. Rule changes start in the `@epdesk/rules` package and its tests.
+- After a change, load the sample bid and check every line's status before and after.
