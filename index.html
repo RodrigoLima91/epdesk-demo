@@ -176,6 +176,11 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:now
 .st.review{background:var(--warn-soft);color:var(--warn)}
 .st.missing{background:var(--bad-soft);color:var(--bad)}
 .st.expired{background:var(--exp-soft);color:var(--exp)}
+.st.out{background:var(--s2,#eef0ec);color:var(--muted)}
+.covgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin:0}
+.covgrid div{display:grid;gap:2px}.covgrid dt{font-size:12.5px;color:var(--muted)}.covgrid dd{margin:0;font-weight:600;font-size:17px}.covgrid dd small{font-weight:400;font-size:12.5px;color:var(--muted)}
+#rv-notes{display:grid;gap:12px}#rv-notes:empty{display:none}
+.dnote{display:grid;gap:4px;padding:10px 20px 0}.dnote input{width:100%}
 
 /* review */
 .reshead{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-start;justify-content:space-between}
@@ -524,7 +529,7 @@ pre.letter{border-radius:6px}
       <div class="side">
         <div class="panel">
           <div class="row" style="justify-content:space-between"><h2>No bid at hand?</h2><span class="chip">Sample</span></div>
-          <p class="small">Try an 18-line E&amp;I bid for an industrial process hall, with the client's EPD requirements on a second sheet. The products and EPDs in it are real, taken from public registries.</p>
+          <p class="small">Try a 20-line E&amp;I bid for an industrial process hall, with the client's EPD requirements on a second sheet. The products and EPDs in it are real, taken from public registries.</p>
           <div class="row">
             <button class="btn secondary" id="use-sample">Use the sample bid</button>
             <button class="btn quiet" id="dl-sample" hidden>Download the sample file</button>
@@ -608,6 +613,7 @@ pre.letter{border-radius:6px}
       </div>
     </div>
     <div id="rv-hero"></div>
+    <div id="rv-notes"></div>
     <div class="tiles" id="tiles" role="group" aria-label="Filter lines by status"></div>
     <div id="rv-suggest" hidden></div>
     <details class="reqbox" id="reqbox">
@@ -706,6 +712,7 @@ pre.letter{border-radius:6px}
 <!-- Libraries: cdnjs first, jsDelivr as a backup if cdnjs is blocked or down -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
 <script>window.XLSX||document.write('<script src="lib/xlsx-0.20.3.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT"><\/script>')</script>
+<script src="lib/epdesk-rules-0.2.0.js" integrity="sha384-c6g0khqVI1OJI7ELdIZNpFcDOuvcaHOZrl2eMK2punccdYzDuyrrD5vUSGXU4veE"></script>
 <script>window.XLSX||document.write('<script src="https://cdn.jsdelivr.net/npm/@e965/xlsx@0.20.3/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"><\/script>')</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>window.JSZip||document.write('<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"><\/script>')</script>
@@ -719,7 +726,7 @@ pre.letter{border-radius:6px}
 const pad=n=>String(n).padStart(2,'0');
 const TODAY=(()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());})();
 const SAMPLE_NAME='EPDesk sample bid - Process hall 3.xlsx';
-const SAMPLE_B64='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';
+const SAMPLE_B64='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';
 
 // ---------- icons ----------
 const I={
@@ -744,9 +751,11 @@ const STATUS={
   ready:{label:'Ready',icon:I.ready,meaning:'Exact or reviewer-confirmed match, and every requirement passes'},
   review:{label:'Needs review',icon:I.review,meaning:'An EPD was found, but a person must confirm something first'},
   missing:{label:'Missing',icon:I.missing,meaning:'No acceptable EPD for this line yet'},
-  expired:{label:'Expired',icon:I.expired,meaning:'The EPD has expired or expires before delivery'}
+  expired:{label:'Expired',icon:I.expired,meaning:'The EPD has expired or expires before delivery'},
+  out:{label:'Not a product',icon:I.na,meaning:'Labour, freight or a service: outside the EPD check'}
 };
-const ORDER={expired:0,missing:1,review:2,ready:3};
+const ORDER={expired:0,missing:1,review:2,ready:3,out:4};
+const OWNER={operator:'Reviewer',customer:'Customer',supplier:'Supplier'};
 
 // ---------- EPDesk prototype library: public registry records, copied by hand Oct-Nov 2026 ----------
 const OC='https://materials.oneclicklca.com/en/material/';
@@ -764,7 +773,7 @@ const P={
  duct:{real:true,listed:'NOBB',src:'https://cdn.byggtjeneste.no/nobb/c2ef6770-a49b-4881-8277-5e3fc6a2c006',brand:'Pipelife Norge',name:'110/3,2-6M PVC kabelrør SN8 rød',codes:[],kw:['kabelrør pvc 110','sn8'],kconf:.95,epd:{type:'product',std:'EN 15804',op:'EPD-Norge',id:'NEPD-2328-1070-NO',ver:true,until:'2025-08-21',du:'1 m',gwp:null,conv:1,cu:'m'}},
  mbox:{real:true,listed:'EFObasen',src:EFO+'1230500',brand:'Schneider Electric',name:'Mureva junction box IP55, surface mounted',codes:[],kw:['koblingsboks'],kconf:.90,epd:{type:'product',std:'EN 50693 (PEP)',op:'PEP ecopassport',id:'ENVPEP1711008_V1-EN',ver:true,until:'2022-11-01',ut:'11.2022',du:'1 pcs',gwp:0.377,conv:1,cu:'pcs'}},
  menc:{real:true,src:EFO+'2021966',brand:'Schneider Electric',name:'Mureva waterproof enclosure for modular devices, 1 row, 3 modules',codes:['13975'],kw:['kapsling'],kconf:.9,epd:{type:'product',std:'EN 50693 (PEP)',op:'PEP ecopassport',id:'SCHN-00931-V01.01-EN',ver:true,until:'2028-03-01',ut:'03.2028',du:'1 pcs',gwp:1.22,conv:1,cu:'pcs'}},
- msock:{real:true,src:'https://sklep.elektrospark.pl/upload/m/download/17855614/pep-ecopassport-schn-00895-v01-01-en.pdf',brand:'Schneider Electric',name:'Mureva socket outlet 16 A, surface mounted (range PEP)',codes:[],kw:['stikkontakt'],kconf:.90,epd:{type:'product',std:'EN 50693 (PEP)',op:'PEP ecopassport',id:'SCHN-00895-V01.01-EN',ver:true,until:'2028-08-01',ut:'08.2028',du:'1 pcs',gwp:0.568,conv:1,cu:'pcs'}},
+ msock:{real:true,src:'https://sklep.elektrospark.pl/upload/m/download/17855614/pep-ecopassport-schn-00895-v01-01-en.pdf',brand:'Schneider Electric',name:'Mureva socket outlet 16 A, surface mounted (range PEP)',codes:[],kw:['stikkontakt'],kconf:.90,epd:{type:'product',cover:'range',std:'EN 50693 (PEP)',op:'PEP ecopassport',id:'SCHN-00895-V01.01-EN',ver:true,until:'2028-08-01',ut:'08.2028',du:'1 pcs',gwp:0.568,conv:1,cu:'pcs'}},
  hb:{real:true,src:'https://materials.oneclicklca.com/jp/material/industrial-high-bay-luminaire/6918923111e5d143300e0340',brand:'Glamox',name:'A90-P2 LED 20000 DALI 840 F/OP C4',codes:['A90212132'],kw:['høytak','high-bay'],kconf:.90,epd:{type:'product',std:'EN 15804+A2',op:'EPD-Norge',id:'NEPD-12160-12165',ver:true,until:'2030-01-01',ut:'2030 (5 years from 2025)',untilNote:'Shown as five years from publication; exact date not recorded',du:'1 pcs',gwp:145,conv:1,cu:'pcs'}},
  panel:{real:true,src:EFO+'2218451',brand:'Glamox',name:'C70-P1280 40/60 LED 5800 DIM',codes:[],kw:['panel','c70'],kconf:.82,epd:{type:'product',std:'EN 15804+A2',op:'EPD-Norge',id:'NEPD-12602-12749',ver:true,until:'2030-10-09',du:'1 pcs',gwp:41.7,conv:1,cu:'pcs'}},
  em:{generic:true,brand:'',name:'Emergency luminaire, LED, 1 h',codes:[],kw:['nødlys'],kconf:.9,epd:null,alt:'lumis'},
@@ -854,6 +863,7 @@ const RX={
   desc:/^(description|beskrivelse|tekst|varetekst|produkttekst|varebeskrivelse|item description|product description)\b/i,
   qty:/^(qty|quantity|antall|mengde|ant\.?)(\s*\(.*\))?$/i,
   unit:/^(unit|enhet|enh\.?|uom)(\s*\(.*\))?$/i,
+  price:/^(unit price|price|pris|enhetspris|enh\.?\s*pris|netto\s?pris|[áa][- ]?pris|stk\.?\s?pris)/i,
   code:/^(code|kode|e-?nr|e-?nummer|el-?nr|nobb|art\.?\s*nr|artikkel|varenr|item no)/i
 };
 function findHeader(rows){
@@ -862,6 +872,7 @@ function findHeader(rows){
     (rows[r]||[]).forEach((v,i)=>{const s=S(v);if(!s)return;
       if(c.desc==null&&RX.desc.test(s))c.desc=i;
       else if(c.qty==null&&RX.qty.test(s))c.qty=i;
+      else if(c.price==null&&RX.price.test(s))c.price=i;
       else if(c.unit==null&&RX.unit.test(s))c.unit=i;
       else if(c.code==null&&RX.code.test(s))c.code=i;});
     if(c.desc!=null&&c.qty!=null)return {r,c};
@@ -877,7 +888,8 @@ function readLines(rows,hr,map){
     const desc=S(row[map.desc]);const qty=num(row[map.qty]);
     if(/^(total|sum|totalt)\b/i.test(desc)||(!desc&&/^(total|sum|totalt)\b/i.test(row.map(S).join(' ').trim())))continue;
     if(!desc||isNaN(qty)){skipped++;continue;}
-    out.push({code:map.code!=null?S(row[map.code]):'',desc,qty,unit:map.unit!=null?S(row[map.unit]):''});
+    const pr=map.price!=null?num(row[map.price]):NaN;
+    out.push({code:map.code!=null?S(row[map.code]):'',desc,qty,unit:map.unit!=null?S(row[map.unit]):'',price:isNaN(pr)?null:pr});
   }
   return {lines:out,skipped};
 }
@@ -888,127 +900,16 @@ function readMeta(rows){
     for(const [key,rx] of META){if(m[key]==null&&rx.test(k)){m[key]=(key==='due'||key==='delivery')?(parseDate(v)||v):v;break;}}});
   return m;
 }
-const YES=v=>/^(yes|ja|y|true|x|required|påkrevd|krav)$/i.test(v);
-const NO=v=>/^(no|nei|n|false|not accepted|ikke)$/i.test(v);
-function interpret(rows){
-  const R={std:null,ver:null,pep:null,spec:null,del:null,gwp:null,src:{},hits:0,clause:''};
-  const text=[];
-  rows.forEach(row=>{
-    const cells=(row||[]).map(S).filter(Boolean);if(!cells.length)return;
-    cells.forEach(c=>{if(c.length>R.clause.length&&c.length>80)R.clause=c;});
-    text.push(cells.join(' '));
-    if(cells.length<2)return;
-    const label=cells[0],val=cells[1];
-    const set=(k,v)=>{if(R[k]===null){R[k]=v;R.src[k]=label+' = '+val;R.hits++;}};
-    const yn=YES(val)||NO(val);
-    if(/pep|50693/i.test(label)&&yn)set('pep',YES(val));
-    else if(/(product.?specific|produktspesifikk|industry|bransje)/i.test(label)&&yn)set('spec',YES(val));
-    else if(/(third.?party|tredjepart|verifi)/i.test(label)&&yn)set('ver',YES(val));
-    else if(/(valid|gyldig|deliver|lever)/i.test(label)&&parseDate(val))set('del',parseDate(val));
-    else if(/(gwp|a1.?a3|co2|klima)/i.test(label)&&yn)set('gwp',YES(val));
-    else if(/(standard|norm)/i.test(label)&&/15804|50693/.test(val))set('std',val);
-  });
-  const T=text.join(' ');
-  const free=(k,v)=>{if(R[k]===null&&v!=null&&v!==false){R[k]=v;R.src[k]='the clause text';R.hits++;}};
-  if(/15804/.test(T))free('std',/15804\s*\+\s*A2/i.test(T)?'NS-EN 15804+A2':'EN 15804');
-  if(/(tredjepart|third.?party|verifi)/i.test(T))free('ver',true);
-  if(/(pep\b|50693)/i.test(T))free('pep',true);
-  if(/(produktspesifikk|product.?specific)/i.test(T))free('spec',true);
-  const dm=T.match(/(lever\w*|deliver\w*)[^.]{0,80}?(\d{1,2}[./]\d{1,2}[./]\d{4}|\d{4}-\d{2}-\d{2})/i);
-  if(dm)free('del',parseDate(dm[2]));
-  if(/(gwp|a1.?a3|klimagass)/i.test(T))free('gwp',true);
-  return R;
-}
-function buildRequirements(sheets,bidIdx,meta){
-  let reqSheets=sheets.filter((s,i)=>i!==bidIdx&&/req|krav|epd|milj|environment|tender|spec/i.test(s.name));
-  if(!reqSheets.length)reqSheets=sheets.filter((s,i)=>i!==bidIdx);
-  let R=interpret(reqSheets.flatMap(s=>s.rows));
-  R.sheet=reqSheets.map(s=>s.name).join(', ');
-  const defaulted=!R.hits;
-  if(defaulted)R={std:null,ver:null,pep:null,spec:null,del:null,gwp:null,src:{},hits:0,clause:'',sheet:''};
-  R.defaulted=defaulted;
-  if(!R.std){R.std='NS-EN 15804+A2';}
-  if(R.ver===null)R.ver=true;
-  if(R.pep===null)R.pep=defaulted?true:false;
-  if(R.spec===null)R.spec=false;
-  if(R.gwp===null)R.gwp=false;
-  if(!R.del){
-    if(meta.delivery&&parseDate(meta.delivery)){R.del=parseDate(meta.delivery);R.src.del='Planned delivery in the project details';}
-    else{R.del=addDays(TODAY,120);R.src.del='Not found in the file; assumed four months from today';R.delAssumed=true;}
-  }
-  return R;
-}
+// Requirements, matching, rules and coverage come from the tested @epdesk/rules package (lib/epdesk-rules-*.js).
+const RULES=window.EPDeskRules||null;
+const {stdVer,stdResult,knownUntil,confLevel,refreshUnconfirmed,confirmRequirements,isMatched}=RULES||{};
+function buildRequirements(sheets,bidIdx,meta){return RULES.buildRequirements(sheets,bidIdx,meta,TODAY);}
+const cloneR=R=>Object.assign({},R,{src:Object.assign({},R.src),prov:Object.assign({},R.prov),unconfirmed:R.unconfirmed.slice()});
 
 // ---------- matching and rules ----------
 const lc=k=>/^Manufacturer/.test(k||'')?'m'+k.slice(1):k;
-const normCode=s=>String(s||'').toUpperCase().replace(/[\s.]/g,'');
-function match(code,desc){
-  const cn=normCode(code);
-  if(cn){for(const [k,p] of Object.entries(P)){if(p.codes.some(x=>normCode(x)===cn)){
-    const kind=cn.startsWith('DEMO-N')||/^\d{8}$/.test(cn)?'NOBB number':cn.startsWith('DEMO-E')||/^\d{7}$/.test(cn)?'E-number':'Manufacturer article no.';
-    return {pid:k,method:'code',kind,conf:1};}}}
-  const d=String(desc||'').toLowerCase();let best=null;
-  for(const [k,p] of Object.entries(P)){for(const w of p.kw){if(w&&d.includes(w)&&(!best||w.length>best.w.length))best={k,w};}}
-  if(best)return {pid:best.k,method:'description',kw:best.w,conf:P[best.k].kconf||0.86};
-  return {pid:null,method:'none',conf:0};
-}
-// Standard version in a record or clause: 'A1', 'A2', or '' when it is not stated
-const stdVer=s=>{const m=/15804\s*\+\s*A([12])/i.exec(s||'');return m?'A'+m[1]:'';};
-// 'pep' (PEP rules apply), 'ok', 'unknown' (version not stated) or 'wrong'
-function stdResult(e,R){if(/PEP/.test(e.std))return 'pep';const need=stdVer(R.std),have=stdVer(e.std);if(!need||have===need||(need==='A1'&&have==='A2'))return 'ok';return have?'wrong':'unknown';}
-// An expiry date we estimated is never treated as a real date
-const knownUntil=e=>e.until&&!e.untilNote?e.until:null;
-// Match confidence shown to people: a level, never a percentage
-function confLevel(l){if(l.method==='code'||l.method==='alternative'||l.confirmed)return 'High';return l.conf>=0.9?'Medium':'Low';}
-function evaluate(l,R){
-  const p=l.pid?P[l.pid]:null,e=p&&p.epd;
-  const checks=[];
-  const add=(state,text)=>checks.push({state,text});
-  // match
-  if(!p)add('no','No product found by code or description');
-  else if(p.generic&&l.method!=='alternative')add('no','The bid line names a product type, not a product');
-  else if(l.method==='code')add('yes','Exact '+lc(l.kind)+' match');
-  else if(l.method==='alternative')add('yes','Alternative product chosen by the reviewer');
-  else if(l.confirmed)add('yes','Description match confirmed by the reviewer');
-  else add('q','Description match, '+confLevel(l)+' confidence, not confirmed');
-  if(e){
-    add(e.ver||!R.ver?'yes':'no',R.ver?(e.ver?'Third-party verified':'Not third-party verified'):'Verification not required');
-    const sr=stdResult(e,R);
-    if(sr==='pep')add(R.pep?'yes':'no',R.pep?'PEP ecopassport accepted for this bid':'PEP ecopassport not accepted for this bid');
-    else if(sr==='ok')add('yes','Standard: '+e.std+(stdVer(R.std)?', meets '+R.std:''));
-    else if(sr==='wrong')add('no','Standard: '+e.std+'; the client requires '+R.std);
-    else add(l.stdChecked?'yes':'q',l.stdChecked?'Standard version confirmed as '+R.std+' by the reviewer':'Standard: '+e.std+', version (+A1 or +A2) not stated; the client requires '+R.std);
-    if(e.type==='generic')add('no','Generic data only, not an EPD');
-    else if(e.type==='industry')add(R.spec?'q':'yes',R.spec?'Industry-average EPD; the client asks for product-specific':'Industry-average EPD accepted for this bid');
-    else add('yes','Product-specific EPD');
-    if(!knownUntil(e))add(l.validityChecked?'yes':'q',l.validityChecked?'Validity checked at the source by the reviewer':e.untilNote?'Validity estimated: '+e.untilNote+'. Check that it covers delivery on '+dmy(R.del):'Expiry date not recorded; check that it covers delivery on '+dmy(R.del));
-    else if(e.until<TODAY)add('no','Expired '+validTxt(e));
-    else if(e.until<R.del)add('no','Valid until '+validTxt(e)+', before delivery on '+dmy(R.del));
-    else add('yes','Valid until '+validTxt(e)+', after delivery on '+dmy(R.del));
-    if(e.convAssumed)add(l.convOk?'yes':'q',l.convOk?'Unit conversion confirmed by the reviewer':'Unit conversion assumed: '+e.convNote);
-    else if(e.conv!==1)add('yes','Unit conversion: '+e.convNote);
-  }
-  const base={checks};
-  if(l.excluded)return Object.assign(base,{s:'missing',t:'Excluded by reviewer',why:l.excluded,next:'Supplier request goes in the report'});
-  if(!p)return Object.assign(base,{s:'missing',t:'No product match',why:'No product was found by code or description in the EPDesk library.',next:'Identify the product'});
-  if(p.generic&&!e)return Object.assign(base,{s:'missing',t:'No product named',why:'The bid line describes a product type, not a specific product, so no EPD can be linked yet.',next:p.alt?'Use the suggested product':'Ask the supplier for a product with an EPD'});
-  if(!e)return Object.assign(base,{s:'missing',t:'No EPD found',why:'No EPD or PEP for this product in the EPDesk library.',next:p.alt?'Use the suggested alternative':'Request an EPD from the supplier'});
-  if(e.type==='generic')return Object.assign(base,{s:'missing',t:'Generic data only',why:'Only a generic dataset exists. It is not accepted as an EPD.',next:'Request a product-specific EPD'});
-  if(R.ver&&!e.ver)return Object.assign(base,{s:'missing',t:'Not verified',why:'The EPD is not third-party verified.',next:'Request a verified EPD'});
-  if(/PEP/.test(e.std)&&!R.pep)return Object.assign(base,{s:'missing',t:'Format not accepted',why:'This is a PEP ecopassport, and the client does not accept PEP for this bid.',next:'Request an EPD to '+R.std});
-  if(stdResult(e,R)==='wrong')return Object.assign(base,{s:'missing',t:'Wrong standard version',why:'The EPD follows '+e.std+'; the client requires '+R.std+'.',next:'Request an EPD to '+R.std});
-  if(knownUntil(e)&&e.until<TODAY)return Object.assign(base,{s:'expired',t:'Expired',why:'The EPD expired '+validTxt(e)+'.',next:p.alt&&l.pid===l.origPid?(p.altLabel||'Use the suggested alternative'):'Request the renewed EPD'});
-  if(knownUntil(e)&&e.until<R.del)return Object.assign(base,{s:'expired',t:'Expires before delivery',why:'Valid until '+validTxt(e)+'; delivery is '+dmy(R.del)+'.',next:'Ask the supplier for the renewal date'});
-  const open=[];
-  if(l.method==='description'&&!l.confirmed)open.push(['Match not confirmed','Matched on the description, '+confLevel(l)+' confidence.','Confirm the product match']);
-  if(e.type==='industry'&&R.spec)open.push(['Industry-average EPD','The client asks for product-specific EPDs; an industry average needs their approval.',p.alt&&l.pid===l.origPid?'Use the product-specific alternative':'Ask the client in Q&A']);
-  if(!e.until&&!l.validityChecked)open.push(['Validity not confirmed','The expiry date is not recorded ('+e.ut+').','Check validity at the source']);
-  else if(e.untilNote&&!l.validityChecked)open.push(['Validity estimated','The expiry date is an estimate ('+e.ut+'), not read from the EPD.','Check validity at the source']);
-  if(stdResult(e,R)==='unknown'&&!l.stdChecked)open.push(['Standard version not stated','The EPD says '+e.std+' without +A1 or +A2; the client requires '+R.std+'.','Confirm +A1 or +A2 in the EPD']);
-  if(e.convAssumed&&!l.convOk)open.push(['Conversion assumed',e.convNote+'.','Confirm the unit conversion']);
-  if(open.length)return Object.assign(base,{s:'review',t:open[0][0],why:open.map(o=>o[1]).join(' '),next:open[0][2],open});
-  return Object.assign(base,{s:'ready',t:'Ready',why:'Every requirement passes.',next:'—'});
-}
+function match(code,desc){return RULES.matchLine(code,desc,P);}
+function evaluate(l,R){return RULES.evaluate(l,R,{library:P,today:TODAY});}
 const altOf=l=>{const p=l.pid?P[l.pid]:null;return p&&p.alt&&l.pid===l.origPid&&l._ev&&l._ev.s!=='ready'?P[p.alt]:null;};
 const needsReq=l=>l._ev.s==='missing'||l._ev.s==='expired';
 const lnum=n=>'L'+String(n).padStart(st.lines.length>99?3:2,'0');
@@ -1017,12 +918,16 @@ function gwpUnit(p){return p&&p.epd&&p.epd.gwp!=null?p.epd.gwp*p.epd.conv:null;}
 // ---------- state ----------
 const st={view:'upload',file:null,sheets:[],sheetIdx:0,hr:0,map:{},meta:{},R:null,R0:null,lines:[],filter:'review',signoff:null,stats:null,drawer:null};
 function compute(){
-  const c={ready:0,review:0,missing:0,expired:0},cov={n:0,kg:0};
-  st.lines.forEach(l=>{l._ev=evaluate(l,st.R);const p=l.pid?P[l.pid]:null;l._gu=gwpUnit(p);l._kg=l._gu!=null?l._gu*l.qty:null;
+  const c={ready:0,review:0,missing:0,expired:0,out:0},cov={n:0,kg:0};
+  st.lines.forEach(l=>{l._ev=evaluate(l,st.R);const p=l.pid?P[l.pid]:null;l._gu=gwpUnit(p);l._kg=l._gu!=null&&l._ev.s!=='out'?l._gu*l.qty:null;
     c[l._ev.s]++;
     if(l._kg!=null&&(l._ev.s==='ready'||l._ev.s==='review')){cov.n++;cov.kg+=l._kg;}});
-  st.stats={c,cov};
+  st.stats={c,cov,cv:RULES.coverage(st.lines,st.lines.map(l=>l._ev),P)};
 }
+const pc=x=>x==null?'n/a':Math.round(x*100)+'%';
+function reqSrc(R,k){const pv=R.prov[k];return pv==='confirmed'?'confirmed by the reviewer':pv==='clause-text'?'read from the clause text, not confirmed':pv==='file'?'from the file ('+R.src[k]+')':pv==='project-details'?'from the project details in the file':pv==='assumed'?'assumed, not confirmed':'default, not confirmed';}
+function logAct(l,action,note){(st.log=st.log||[]).push({at:new Date().toISOString(),n:l?l.n:null,action,note:note||''});}
+function npSuggested(){return st.lines.filter(l=>l.npSuggest&&!l.notProduct&&!l.npKept&&l._ev&&l._ev.s!=='out');}
 function changed(){
   if(st.signoff){st.signoff=null;toast('Sign-off removed because the results changed');}
 }
@@ -1053,6 +958,7 @@ function fileError(name,plain){
   $('#up-error').scrollIntoView({block:'nearest',behavior:REDUCE?'auto':'smooth'});
 }
 function openFile(name,bytes,isDemo){
+  if(!RULES){showError('<b>The rules engine did not load.</b> Reload the page. No bid can be checked without it.');return;}
   showError('');
   let sheets;
   try{sheets=loadSheets(name,bytes);}
@@ -1068,7 +974,7 @@ function openFile(name,bytes,isDemo){
   }
   const rows=sheets[st.sheetIdx].rows;
   st.meta=readMeta(rows.slice(0,st.hr));
-  st.R=buildRequirements(sheets,st.sheetIdx,st.meta);st.R0=Object.assign({},st.R,{src:Object.assign({},st.R.src)});
+  st.R=buildRequirements(sheets,st.sheetIdx,st.meta);st.R0=cloneR(st.R);
   renderPreview();screen('preview');
 }
 function readFile(f){
@@ -1091,7 +997,7 @@ function renderPreview(){
   $('#pv-map').innerHTML=
     (st.sheets.length>1?'<div class="field"><label for="map-sheet">Sheet with the bid lines</label><select id="map-sheet" data-map="sheet">'+st.sheets.map((s,i)=>'<option value="'+i+'"'+(i===st.sheetIdx?' selected':'')+'>'+esc(s.name)+'</option>').join('')+'</select></div>':'')+
     '<div class="field"><label for="map-hr">Header row</label><select id="map-hr" data-map="hr">'+hrOpts+'</select></div>'+
-    f('desc','Description',true)+f('qty','Quantity',true)+f('unit','Unit',false)+f('code','Product code',false,'E-nr, NOBB or article number');
+    f('desc','Description',true)+f('qty','Quantity',true)+f('unit','Unit',false)+f('code','Product code',false,'E-nr, NOBB or article number')+f('price','Unit price',false,'Net price, for coverage by value. It stays in this browser tab');
   const r=currentRead(),ok=st.map.desc!=null&&st.map.qty!=null;
   let status;
   if(!ok)status='<div class="notice bad">'+I.warn+'<div><b>Point to the description and quantity columns.</b> We couldn\'t find them automatically. Pick them from the lists below; the preview updates as you choose.</div></div>';
@@ -1117,7 +1023,7 @@ function renderPreview(){
   $('#pv-note').textContent=ok&&r.lines.length?(R.delAssumed?'Planned delivery was not in the file, so it is set to '+dmy(R.del)+'. Change it under EPD requirements.':''):'Map the description and quantity columns to continue.';
 }
 function rulesHTML(px){
-  const R=st.R,src=k=>R.src[k]?'From the file: '+R.src[k]:(R.defaulted?'Default rule':'Not in the file; default rule');
+  const R=st.R,src=k=>{const pv=R.prov[k];return pv==='confirmed'?'Confirmed by the reviewer':pv==='clause-text'?'Read from the clause text; not confirmed':R.src[k]&&pv!=='assumed'?'From the file: '+R.src[k]:pv==='assumed'?'Assumed; not confirmed':k==='gwp'?(R.src[k]?'From the file: '+R.src[k]:'Not in the file'):'Default; not confirmed';};
   const cb=(k,label,extra)=>'<div class="rule"><input type="checkbox" id="'+px+'-'+k+'" data-rule="'+k+'"'+(R[k]?' checked':'')+'><label for="'+px+'-'+k+'">'+label+'</label><span class="src">'+(extra?extra+' · ':'')+esc(src(k))+'</span></div>';
   return cb('ver','Third-party verified EPD required','Standard '+esc(R.std))+
     cb('pep','Accept PEP ecopassport (EN 50693)','Electrical products')+
@@ -1132,7 +1038,8 @@ const RSTEPS=['Reading bid lines','Matching products','Checking EPD records','Ap
 function startCheck(){
   const r=currentRead();if(!r.lines.length)return;
   const rows=st.sheets[st.sheetIdx].rows;
-  st.lines=r.lines.map((x,i)=>{const m=match(x.code,x.desc);return Object.assign({},x,{n:i+1,pid:m.pid,origPid:m.pid,method:m.method,origMethod:m.method,kind:m.kind,kw:m.kw,conf:m.conf,confirmed:false,convOk:false,validityChecked:false,excluded:null,reqOpen:false});});
+  st.lines=r.lines.map((x,i)=>{const m=match(x.code,x.desc);return Object.assign({},x,{n:i+1,pid:m.pid,origPid:m.pid,method:m.method,origMethod:m.method,kind:m.kind,kw:m.kw,conf:m.conf,codeDoubt:!!m.codeDoubt,npSuggest:!!m.npSuggest,confirmed:false,convOk:false,validityChecked:false,stdChecked:false,unitOk:false,coverOk:false,versionOk:false,notProduct:null,excluded:null,reqOpen:false});});
+  st.log=[];
   st.skipped=r.skipped;st.filter='all';st.signoff=null;
   runReading();
 }
@@ -1194,25 +1101,36 @@ async function runReading(){
 function reqSummary(){const R=st.R;return (R.ver?'Verified EPDs':'EPDs')+' to '+R.std+' · PEP '+(R.pep?'accepted':'not accepted')+' · product-specific '+(R.spec?'required':'not required')+' · valid at '+dmy(R.del);}
 function renderReview(){
   compute();
-  const m=st.meta,R=st.R,c=st.stats.c,cov=st.stats.cov,N=st.lines.length||1;
+  const m=st.meta,R=st.R,c=st.stats.c,cov=st.stats.cov,cv=st.stats.cv,N=st.lines.length||1;
   $('#rv-h').textContent=m.project||st.file.name.replace(/\.[^.]+$/,'');
   $('#rv-meta').innerHTML=[
     m.quote?'<span>Quote <b class="mono">'+esc(m.quote)+'</b></span>':'',
     m.client?'<span>Client <b>'+esc(m.client)+'</b></span>':'',
     m.due&&parseDate(m.due)?'<span>Bid due <b>'+dmy(parseDate(m.due))+'</b></span>':'',
     '<span>Delivery <b>'+dmy(R.del)+'</b></span>',
-    '<span>'+st.lines.length+' lines</span>',
+    '<span>'+st.lines.length+' lines'+(cv.out?' · '+cv.out+' not products':'')+'</span>',
     st.file.isDemo?'<span class="chip">Sample bid</span>':''].join('');
   const tile=(s,sub)=>'<button class="tile '+s+'" data-filter="'+s+'" aria-pressed="'+(st.filter===s)+'"><span class="k">'+STATUS[s].icon+STATUS[s].label+'</span><span class="v">'+c[s]+'</span><span class="s">'+sub+'</span></button>';
-  const pct=Math.round(cov.n/N*100);
-  const found=st.lines.filter(l=>{const p=l.pid?P[l.pid]:null;return p&&p.epd;}).length;
+  const pct=Math.round(cov.n/(cv.inScope||1)*100);
+  const found=st.stats.cv.identified;
   const exp=st.lines.filter(l=>l._ev.s==='expired'),listed=exp.filter(l=>P[l.pid]&&P[l.pid].listed);
   const reg=[...new Set(listed.map(l=>P[l.pid].listed))];
   const bits=[];
   if(c.expired)bits.push('<b>'+c.expired+' expired EPD'+(c.expired>1?'s':'')+' caught</b>'+(listed.length?' ('+(listed.length===c.expired?(c.expired>1?'all still':'still'):listed.length+' still')+' in '+reg.join(' or ')+')':''));
   if(c.missing)bits.push('<b>'+c.missing+' gap'+(c.missing>1?'s':'')+'</b>, each with a next step');
   bits.push('<b>'+c.ready+' line'+(c.ready===1?'':'s')+' ready</b> to attach');
-  $('#rv-hero').innerHTML='<div class="hero"><p class="hero-h">EPDs found for <b>'+found+' of '+st.lines.length+'</b> lines</p><p class="hero-s">'+bits.join(' · ')+'</p>'+(st.checkSec?'<p class="hero-t">Checked in '+st.checkSec+' seconds. By hand, '+st.lines.length+' lines take about '+fmt(st.lines.length*15/60,1)+' hours (15 minutes a line, our estimate).</p>':'')+'</div>';
+  $('#rv-hero').innerHTML='<div class="hero"><p class="hero-h">EPDs found for <b>'+found+' of '+cv.inScope+'</b> product lines</p><p class="hero-s">'+bits.join(' · ')+'</p>'+(st.checkSec?'<p class="hero-t">Checked in '+st.checkSec+' seconds. By hand, '+st.lines.length+' lines take about '+fmt(st.lines.length*15/60,1)+' hours (15 minutes a line, our estimate).</p>':'')+'</div>';
+  const nps=npSuggested(),V=cv.value;
+  $('#rv-notes').innerHTML=
+    (R.unconfirmed.length?'<div class="notice warn">'+I.warn+'<div><b>'+R.unconfirmed.length+' requirement'+(R.unconfirmed.length>1?'s are':' is')+' not confirmed, so no line can be Ready.</b> '+esc(R.unconfirmed.join('; '))+'. Check them against the tender or with the customer, change any that are wrong under Client requirements, then confirm.<div class="row" style="margin-top:8px"><button class="btn sm" data-act="confirm-reqs">Confirm these requirements</button></div></div></div>':'')+
+    (nps.length?'<div class="notice warn">'+I.warn+'<div><b>'+nps.length+' line'+(nps.length>1?'s read':' reads')+' like labour, freight or a service:</b> '+nps.map(l=>lnum(l.n)+' '+esc(l.desc)).join('; ')+'. Lines that are not products leave the coverage figures. Each one is listed in the report.<div class="row" style="margin-top:8px"><button class="btn sm" data-act="np-all">Mark '+(nps.length>1?'all '+nps.length:'it')+' as not a product</button><span class="small muted">Or open a line to decide one by one.</span></div></div></div>':'')+
+    '<div class="panel"><h2 style="margin-bottom:10px">Coverage</h2><dl class="covgrid">'+
+      '<div><dt>Product matched (not the same as Ready)</dt><dd>'+cv.matched+' of '+cv.inScope+' <small>'+pc(cv.pct.matched)+'</small></dd></div>'+
+      '<div><dt>EPD linked</dt><dd>'+cv.identified+' of '+cv.inScope+' <small>'+pc(cv.pct.identified)+'</small></dd></div>'+
+      '<div><dt>Ready</dt><dd>'+cv.ready+' of '+cv.inScope+' <small>'+pc(cv.pct.ready)+'</small></dd></div>'+
+      (V.available?'<div><dt>Value with an EPD linked</dt><dd>'+pc(V.pctIdentified)+'</dd></div><div><dt>Value Ready</dt><dd>'+pc(V.pctReady)+' <small>of '+fmt(V.total)+' NOK'+(R.valueTarget?' · client target '+pc(R.valueTarget)+(V.pctReady>=R.valueTarget?', met':', not met yet'):'')+'</small></dd></div>':'<div><dt>Coverage by value</dt><dd><small>Not available: '+(st.map.price==null?'no unit price column is mapped':'prices are missing for '+V.missingPrice+' line'+(V.missingPrice===1?'':'s'))+'</small></dd></div>')+
+      '<div><dt>Open items by owner</dt><dd><small>Reviewer '+cv.owners.operator+' · Customer '+cv.owners.customer+' · Supplier '+cv.owners.supplier+'</small></dd></div>'+
+    '</dl></div>';
   const sug=suggested(),sg=$('#rv-suggest');
   sg.hidden=!sug.length;
   sg.innerHTML=sug.length?'<div class="panel suggest"><div class="row" style="justify-content:space-between;align-items:flex-start"><div style="display:grid;gap:4px;max-width:72ch"><h2>Confirm '+sug.length+' suggested match'+(sug.length>1?'es':'')+'</h2><p class="small muted">These lines were matched on the description with Medium confidence. Check the pairs, then confirm them together. Low-confidence matches stay for one-by-one review.</p></div><button class="btn" data-act="confirm-suggested">Confirm all '+sug.length+'</button></div><details class="sugpairs"><summary class="small" style="cursor:pointer;font-weight:600;color:var(--accent)">Show the '+sug.length+' pairs</summary><div class="tablebox" style="margin-top:10px"><table class="sugtable"><thead><tr><th scope="col">Line</th><th scope="col">In the bid</th><th scope="col">Matched product</th><th scope="col" class="num">Match</th></tr></thead><tbody>'+sug.map(l=>'<tr><td class="mono">'+lnum(l.n)+'</td><td>'+esc(l.desc)+'</td><td>'+esc(prodName(P[l.pid]))+'</td><td class="num">'+confLevel(l)+'</td></tr>').join('')+'</tbody></table></div></details></div>':'';
@@ -1221,22 +1139,22 @@ function renderReview(){
     tile('missing','Each with a next step')+
     tile('review','A person confirms first')+
     tile('ready','All checks pass')+
-    '<div class="tile co2"><span class="k">CO₂e total, A1–A3</span><span class="v">'+fmt(cov.kg/1000,1)+' t</span><span class="s">From '+cov.n+' of '+st.lines.length+' lines ('+pct+'%). Missing and expired lines are left out.</span><span class="cov" aria-hidden="true"><i style="width:'+pct+'%"></i></span></div>';
+    '<div class="tile co2"><span class="k">CO₂e total, A1–A3</span><span class="v">'+fmt(cov.kg/1000,1)+' t</span><span class="s">From '+cov.n+' of '+cv.inScope+' product lines ('+pct+'%). Missing and expired lines are left out.</span><span class="cov" aria-hidden="true"><i style="width:'+pct+'%"></i></span></div>';
   // requirements box
-  const ch=['pep','spec','del','ver','gwp'].some(k=>st.R[k]!==st.R0[k]);
+  const ch=['pep','spec','del','ver','gwp'].some(k=>st.R[k]!==st.R0[k])||st.R.unconfirmed.length!==st.R0.unconfirmed.length;
   $('#req-sum').textContent=reqSummary()+(R.defaulted?' · default rules':'');
   $('#rv-rules').innerHTML=rulesHTML('rv');
   $('#req-reset-row').innerHTML=ch?'<span class="changed">Rules changed here; the file is unchanged.</span><button class="btn secondary sm" data-act="reset-rules">Reset to the rules from the file</button>':'';
   renderLines();
 }
-function suggested(){return st.lines.filter(l=>l.method==='description'&&!l.confirmed&&!l.excluded&&l.conf>=0.9&&l.pid&&!P[l.pid].generic&&l._ev&&l._ev.s==='review');}
+function suggested(){return st.lines.filter(l=>l.method==='description'&&!l.npSuggest&&!l.notProduct&&!l.confirmed&&!l.excluded&&l.conf>=0.9&&l.pid&&!P[l.pid].generic&&l._ev&&l._ev.s==='review');}
 function renderLines(){
   const f=st.filter;
   let ls=st.lines.slice();
   if(f!=='all')ls=ls.filter(l=>l._ev.s===f);
   ls.sort((a,b)=>ORDER[a._ev.s]-ORDER[b._ev.s]||a.n-b.n);
   const c=st.stats.c;
-  $('#showing').innerHTML=f==='all'?'Showing <b>all '+st.lines.length+' lines</b>, problems first. Choose a status above to filter.':
+  $('#showing').innerHTML=f==='all'?'Showing <b>all '+st.lines.length+' lines</b>, problems first'+(c.out?', lines that are not products last':'')+'. Choose a status above to filter.':
     'Showing <b>'+ls.length+' line'+(ls.length===1?'':'s')+' marked '+STATUS[f].label+'</b>. '+{review:'An EPD was found, but a person must confirm something first.',missing:'No acceptable EPD for these lines yet.',expired:'The EPD has expired or expires before delivery.',ready:'Exact or reviewer-confirmed match, and every requirement passes.'}[f]+' <button class="btn quiet sm" data-filter="all">Show all '+st.lines.length+'</button>';
   const head='<thead><tr><th scope="col">Bid line, product and code</th><th scope="col" class="num">Qty</th><th scope="col">Match</th><th scope="col">EPD source, type and validity</th><th scope="col">Requirement result</th><th scope="col" class="num">CO₂e</th><th scope="col">Next action</th></tr></thead>';
   if(!ls.length){
@@ -1247,6 +1165,7 @@ function renderLines(){
 function matchHTML(l){
   if(!l.pid)return '<span class="mt none">'+I.missing+'No match</span><span class="sub">Searched code and description</span>';
   if(P[l.pid].generic)return '<span class="mt none">'+I.missing+'Type only</span><span class="sub">No product named in the bid</span>';
+  if(l.method==='code'&&l.codeDoubt&&!l.confirmed)return '<span class="mt unsure">'+I.q.replace('class="ic q"','class="ic"')+'Code, check</span><span class="sub">'+esc(l.kind)+' <span class="mono">'+esc(l.code)+'</span>; the description differs</span>';
   if(l.method==='code')return '<span class="mt exact">'+I.check+'Exact code</span><span class="sub">'+esc(l.kind)+' <span class="mono">'+esc(l.code)+'</span></span>';
   if(l.method==='alternative')return '<span class="mt alt">Alternative</span><span class="sub">Chosen by the reviewer</span>';
   return l.confirmed?'<span class="mt exact">'+I.check+'Description</span><span class="sub">Confirmed by the reviewer</span>':'<span class="mt unsure">'+I.q.replace('class="ic q"','class="ic"')+'Description, '+confLevel(l)+'</span><span class="sub">Keyword "'+esc(l.kw)+'"; not confirmed</span>';
@@ -1261,9 +1180,9 @@ function rowHTML(l){
     '<td data-label="Qty" class="num"><span><span class="mono">'+fmt(l.qty,l.qty%1?2:0)+'</span> '+esc(l.unit)+'</span></td>'+
     '<td data-label="Match"><div class="cell">'+matchHTML(l)+'</div></td>'+
     '<td data-label="EPD"><div class="cell">'+epd+'</div></td>'+
-    '<td data-label="Result"><div class="cell">'+badge(ev.s)+'<span class="sub">'+esc(ev.s==='ready'?'All checks pass':ev.s==='expired'&&e&&e.until?(e.until<TODAY?'Expired ':'Valid to ')+validTxt(e)+(p.listed&&e.until<TODAY?' · still in '+p.listed:''):ev.t)+'</span></div></td>'+
+    '<td data-label="Result"><div class="cell">'+badge(ev.s)+'<span class="sub">'+esc(ev.s==='ready'?'All checks pass':ev.s==='out'?'Outside the EPD check':ev.s==='expired'&&e&&e.until?(e.until<TODAY?'Expired ':'Valid to ')+validTxt(e)+(p.listed&&e.until<TODAY?' · still in '+p.listed:''):ev.t)+'</span></div></td>'+
     '<td data-label="CO₂e" class="num"><div class="cell">'+co2+'</div></td>'+
-    '<td data-label="Next action"><span class="next">'+esc(ev.next)+'</span></td></tr>';
+    '<td data-label="Next action"><div class="cell"><span class="next">'+esc(ev.next)+'</span>'+(ev.owner?'<span class="sub">'+OWNER[ev.owner]+' acts</span>':'')+'</div></td></tr>';
 }
 
 // ---------- drawer ----------
@@ -1287,7 +1206,7 @@ function renderDrawer(){
   const dd=(k,v)=>'<dt>'+k+'</dt><dd>'+v+'</dd>';
   let h='<div class="dhead"><div class="top"><div style="display:grid;gap:4px;min-width:0"><span class="eyebrow">Line '+lnum(l.n)+(l.code?' · <span class="mono">'+esc(l.code)+'</span>':'')+'</span><h2 id="d-title">'+esc(l.desc)+'</h2></div><button class="dclose" id="d-close" aria-label="Close evidence">'+I.close+'</button></div>'+
     '<div class="row">'+badge(ev.s)+'<span class="small">'+esc(ev.s==='ready'?STATUS.ready.meaning:ev.why)+'</span></div>'+
-    (ev.s!=='ready'?'<p class="small"><b>Next action:</b> '+esc(ev.next)+'</p>':'')+'</div><div class="dbody">';
+    (ev.s!=='ready'&&ev.s!=='out'?'<p class="small"><b>Next action:</b> '+esc(ev.next)+(ev.owner?' · <b>'+OWNER[ev.owner]+'</b> acts':'')+'</p>':'')+'</div><div class="dbody">';
   // product match
   h+='<section class="dsec"><h3>Product match</h3><dl class="ev">'+
     dd('Bid line',esc(l.desc)+' · <span class="mono">'+fmt(l.qty,l.qty%1?2:0)+'</span> '+esc(l.unit))+
@@ -1346,7 +1265,11 @@ function renderDrawer(){
   const acts=[];
   if(ev.s==='review'){
     (ev.open||[]).forEach(o=>{
-      if(o[0]==='Match not confirmed')acts.push('<button class="btn" data-act="confirm-match">Confirm this product</button>');
+      if(o[0]==='Match not confirmed'||o[0]==='Code and description disagree')acts.push('<button class="btn" data-act="confirm-match">Confirm this product</button>');
+      if(o[0]==='Range EPD'||o[0]==='Manufacturer-average EPD')acts.push('<button class="btn secondary" data-act="confirm-cover">The EPD covers this product</button>');
+      if(o[0]==='Newer EPD version exists')acts.push('<button class="btn secondary" data-act="confirm-version">Keep this EPD version</button>');
+      if(o[0]==='PEP edition not stated')acts.push('<button class="btn secondary" data-act="confirm-std">PEP standard and edition checked</button>');
+      if(o[0]==='Unit differs')acts.push('<button class="btn secondary" data-act="confirm-unit">Unit and conversion checked</button>');
       if(o[0]==='Conversion assumed')acts.push('<button class="btn secondary" data-act="confirm-conv">Confirm the conversion</button>');
       if(o[0]==='Standard version not stated')acts.push('<button class="btn secondary" data-act="confirm-std">The EPD meets '+esc(R.std)+'</button>');
       if(o[0]==='Validity not confirmed'||o[0]==='Validity estimated')acts.push('<button class="btn secondary" data-act="check-valid">Validity checked at source</button>');
@@ -1356,9 +1279,11 @@ function renderDrawer(){
   if(ev.s==='review')acts.push('<button class="btn quiet" data-act="exclude">Leave out and request</button>');
   if(l.excluded)acts.push('<button class="btn secondary" data-act="include">Put back for review</button>');
   if(l.pid!==l.origPid)acts.push('<button class="btn quiet" data-act="undo-alt">Undo the change</button>');
-  if(l.method==='description'&&l.confirmed)acts.push('<button class="btn quiet" data-act="unconfirm">Undo confirmation</button>');
+  if((l.method==='description'||l.codeDoubt)&&l.confirmed)acts.push('<button class="btn quiet" data-act="unconfirm">Undo confirmation</button>');
+  if(l.notProduct)acts.push('<button class="btn secondary" data-act="is-product">Put back in scope</button>');
+  else if(ev.s!=='ready')acts.push('<button class="btn quiet" data-act="not-product">Not a product</button>');
   acts.push('<span style="flex:1"></span><button class="btn quiet" data-act="next-line">Next line to review →</button>');
-  h+='<div class="dfoot">'+acts.join('')+'</div>';
+  h+='<div class="dnote"><label class="small muted" for="d-note">Reason or evidence for your next action (goes in the override log)</label><input id="d-note" type="text" placeholder="For example: checked in the EPD, page 2"></div><div class="dfoot">'+acts.join('')+'</div>';
   $('#drawer').innerHTML=h;
 }
 function needBy(){
@@ -1394,15 +1319,23 @@ function lineAction(act){
   const l=st.lines[st.drawer-1];if(!l)return;
   const p=l.pid?P[l.pid]:null;
   const before=l._ev.s;
+  const ne=$('#d-note'),note=ne?ne.value.trim():'';
+  const LOG={'confirm-match':'Match confirmed','unconfirm':'Match confirmation removed','confirm-conv':'Unit conversion confirmed','check-valid':'Validity checked at the source','confirm-std':'Standard version confirmed as meeting '+st.R.std,'confirm-cover':'Range or average EPD confirmed to cover the product','confirm-unit':'Unit difference checked','confirm-version':'Older EPD version kept','use-alt':'Alternative product chosen','undo-alt':'Alternative undone','exclude':'Line left out','include':'Line put back for review','not-product':'Marked as not a product','is-product':'Put back in scope'};
   if(act==='confirm-match'){l.confirmed=true;}
   else if(act==='unconfirm'){l.confirmed=false;}
   else if(act==='confirm-conv'){l.convOk=true;}
   else if(act==='check-valid'){l.validityChecked=true;}
   else if(act==='confirm-std'){l.stdChecked=true;}
+  else if(act==='confirm-cover'){l.coverOk=true;}
+  else if(act==='confirm-unit'){l.unitOk=true;}
+  else if(act==='confirm-version'){l.versionOk=true;}
+  else if(act==='not-product'){l.notProduct='Not a product'+(note?': '+note:' (marked by the reviewer)');}
+  else if(act==='is-product'){l.notProduct=null;l.npKept=true;}
   else if(act==='use-alt'&&p&&p.alt){l.pid=p.alt;l.method='alternative';l.confirmed=true;l.reqOpen=false;}
   else if(act==='undo-alt'){l.pid=l.origPid;l.method=l.origMethod;l.confirmed=false;}
   else if(act==='exclude'){l.excluded='Left out by the reviewer: '+l._ev.t.toLowerCase()+'. A supplier request goes in the report.';}
   else if(act==='include'){l.excluded=null;}
+  if(LOG[act])logAct(l,LOG[act],note);
   else if(act==='show-req'){l.reqOpen=true;renderDrawer();return;}
   else if(act==='copy-req'){copyText(reqText(l),'Request',$('#req-text'));return;}
   else if(act==='next-line'){const n=nextReview(l.n);if(n){st.drawer=n;renderDrawer();document.querySelectorAll('#lines tbody tr').forEach(r=>r.classList.toggle('sel',+r.dataset.n===n));$('#d-close').focus();}else toast('No lines need review');return;}
@@ -1460,7 +1393,7 @@ function renderPack(){
 
 // ---------- PDF ----------
 const C={fg:[36,51,47],muted:[74,87,82],accent:[33,107,94],line:[200,209,202],soft:[231,240,234],s2:[238,241,236],ok:[43,107,71],warn:[133,88,26],warnSoft:[255,242,216],bad:[167,70,64],badSoft:[252,232,229],exp:[140,74,47]};
-const SCOL={ready:C.ok,review:C.warn,missing:C.bad,expired:C.exp};
+const SCOL={ready:C.ok,review:C.warn,missing:C.bad,expired:C.exp,out:C.muted};
 const PMAP={'₂':'2','²':'2','→':'->','≥':'>=','≤':'<=','↗':'',' ':' ',' ':' ',' ':' ','×':'x','−':'-'};
 function T(s){return String(s==null?'':s).replace(/[₂²→≥≤↗   ×−]/g,c=>PMAP[c]).replace(/[^\x00-\xFF–—‘’“”•…]/g,'');}
 function newDoc(){const {jsPDF}=window.jspdf;return new jsPDF({unit:'mm',format:'a4'});}
@@ -1478,7 +1411,7 @@ const TBL={styles:{font:'helvetica',fontSize:8.6,cellPadding:{top:1.8,bottom:1.8
 function buildReport(){
   compute();
   const doc=newDoc(),W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=16,CW=W-2*M;
-  const m=st.meta,R=st.R,c=st.stats.c,cov=st.stats.cov,so=st.signoff,L=packLists();
+  const m=st.meta,R=st.R,c=st.stats.c,cov=st.stats.cov,cv=st.stats.cv,so=st.signoff,L=packLists();
   const title='EPD coverage report · '+(m.project||st.file.name)+(m.quote?' · '+m.quote:'');
   // header band
   doc.setFillColor(...C.accent);doc.rect(0,0,W,32,'F');
@@ -1488,8 +1421,8 @@ function buildReport(){
   doc.setFontSize(9.5);doc.text(so?'REVIEWED':'DRAFT - NOT REVIEWED',W-M,23,{align:'right'});
   let y=40;
   // headline
-  const found=st.lines.filter(l=>{const p=l.pid?P[l.pid]:null;return p&&p.epd;}).length;
-  doc.setTextColor(...C.fg);doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text(T('EPDs found for '+found+' of '+st.lines.length+' lines'),M,y+2);
+  const found=st.stats.cv.identified;
+  doc.setTextColor(...C.fg);doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text(T('EPDs found for '+found+' of '+cv.inScope+' product lines'),M,y+2);
   doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(...C.muted);
   doc.text(T([c.expired?c.expired+' expired EPD'+(c.expired>1?'s':'')+' caught':'',c.missing?c.missing+' gap'+(c.missing>1?'s':'')+' with a next step':'',c.ready+' line'+(c.ready===1?'':'s')+' ready'].filter(Boolean).join('  ·  ')),M,y+8);
   y+=17;
@@ -1506,14 +1439,28 @@ function buildReport(){
     doc.setFont('helvetica','bold');doc.setFontSize(15);doc.setTextColor(...col);doc.text(T(v),x+3,y+15.5);});
   y+=24;
   doc.setFont('helvetica','normal');doc.setFontSize(8.6);doc.setTextColor(...C.muted);
-  doc.text(T('CO2e covers '+cov.n+' of '+st.lines.length+' lines ('+Math.round(cov.n/(st.lines.length||1)*100)+'%) with EPD data that is not expired: Ready and Needs-review lines only.'),M,y,{maxWidth:CW});
+  doc.text(T('CO2e covers '+cov.n+' of '+cv.inScope+' product lines ('+Math.round(cov.n/(cv.inScope||1)*100)+'%) with EPD data that is not expired: Ready and Needs-review lines only.'),M,y,{maxWidth:CW});
   y+=8;
-  // requirements
+  // coverage (matched, linked and Ready are three different things)
+  const V=cv.value,bul=t=>{const ls=doc.splitTextToSize('•  '+T(t),CW-2);doc.text(ls,M+1,y);y+=ls.length*4.6+.4;};
+  doc.setFont('helvetica','bold');doc.setFontSize(11.5);doc.setTextColor(...C.fg);doc.text(T('Coverage of the '+cv.inScope+' product lines'),M,y);y+=5.5;
+  doc.setFont('helvetica','normal');doc.setFontSize(9.5);
+  bul('Product matched (exact code or confirmed by the reviewer): '+cv.matched+' of '+cv.inScope+' ('+pc(cv.pct.matched)+'). A match is not the same as an accepted EPD.');
+  bul('EPD linked: '+cv.identified+' of '+cv.inScope+' ('+pc(cv.pct.identified)+').   Ready to send: '+cv.ready+' of '+cv.inScope+' ('+pc(cv.pct.ready)+').');
+  bul(V.available?'By material value (quantity x unit price in the bid): '+pc(V.pctIdentified)+' has an EPD linked, '+pc(V.pctReady)+' is Ready.'+(R.valueTarget?' Client target: '+pc(R.valueTarget)+(V.pctReady>=R.valueTarget?', met.':', not met yet.'):''):'By material value: not available, because '+(st.map.price==null?'the bid has no unit price column.':'unit prices are missing for '+V.missingPrice+' line(s).'));
+  if(cv.out)bul(cv.out+' line(s) are not products (labour, freight or services) and are outside these figures. They are listed in this report.');
+  bul('Open items: '+(cv.review+cv.missing+cv.expired)+'. Who acts next: reviewer '+cv.owners.operator+', customer '+cv.owners.customer+', supplier '+cv.owners.supplier+'.');
+  y+=3;
+  // requirements, each with its source
   doc.setFont('helvetica','bold');doc.setFontSize(11.5);doc.setTextColor(...C.fg);doc.text('Requirements applied',M,y);y+=5.5;
   doc.setFont('helvetica','normal');doc.setFontSize(9.5);
-  const rl=['Standard: '+R.std+(R.ver?', third-party verified':''),'PEP ecopassport / EN 50693: '+(R.pep?'accepted':'not accepted'),'Product-specific EPD: '+(R.spec?'required (industry average only with approval)':'not required'),'Valid at delivery: '+dmy(R.del),'Total GWP A1-A3 for the delivery: '+(R.gwp?'required':'not required')];
-  if(['pep','spec','del','ver','gwp'].some(k=>st.R[k]!==st.R0[k]))rl.push('Note: rules were changed in EPDesk and differ from the file.');
-  rl.forEach(t=>{doc.text('•  '+T(t),M+1,y);y+=5;});
+  bul('Standard: '+R.std+' - '+reqSrc(R,'std'));
+  bul('Third-party verification: '+(R.ver?'required':'not required')+' - '+reqSrc(R,'ver'));
+  bul('PEP ecopassport / EN 50693: '+(R.pep?'accepted':'not accepted')+' - '+reqSrc(R,'pep'));
+  bul('Product-specific EPD: '+(R.spec?'required (industry average only with approval)':'not required')+' - '+reqSrc(R,'spec'));
+  bul('Valid at delivery: '+dmy(R.del)+' - '+reqSrc(R,'del'));
+  bul('Total GWP A1-A3 for the delivery: '+(R.gwp?'required':'not required'));
+  if(R.unconfirmed.length){doc.setFont('helvetica','bold');doc.setTextColor(...C.bad);bul('Not confirmed with the customer: '+R.unconfirmed.length+' requirement(s). No line can be Ready until they are confirmed.');doc.setFont('helvetica','normal');doc.setTextColor(...C.fg);}
   y+=2;
   // sign-off status
   doc.setFont('helvetica','bold');doc.setFontSize(11.5);doc.text('Sign-off',M,y);y+=5.5;
@@ -1541,7 +1488,7 @@ function buildReport(){
   if(L.review.length){
     const sy=section('2. Needs review',C.warn,40);
     doc.autoTable(Object.assign({},TBL,{startY:sy+2,head:[['Line','Bid line','Open checks','Next action']],
-      body:L.review.map(l=>[lnum(l.n),T(l.desc),T((l._ev.open||[]).map(o=>o[0]+': '+o[1]).join('\n')),T(l._ev.next)]),
+      body:L.review.map(l=>[lnum(l.n),T(l.desc),T((l._ev.open||[]).map(o=>o[0]+': '+o[1]).join('\n')),T(l._ev.next+(l._ev.owner?'\n'+OWNER[l._ev.owner]+' acts':''))]),
       headStyles:Object.assign({},TBL.headStyles,{fillColor:C.warn}),
       columnStyles:{0:{cellWidth:11,fontStyle:'bold'},1:{cellWidth:46},2:{cellWidth:80},3:{cellWidth:'auto'}}}));
   }
@@ -1569,12 +1516,19 @@ function buildReport(){
       y+=h+5;});
     sn++;
   }
-  // assumptions
-  if(!L.gaps.length){y=doc.lastAutoTable.finalY+12;}
+  // lines outside the check, and the override log
+  y=L.gaps.length?y+4:doc.lastAutoTable.finalY+12;
+  const tsec=(t,head,body,cols)=>{if(y>H-55){doc.addPage();y=22;}doc.setFont('helvetica','bold');doc.setFontSize(12.5);doc.setTextColor(...C.fg);doc.text(T(sn+'. '+t),M,y);sn++;
+    doc.autoTable(Object.assign({},TBL,{startY:y+4,head:[head],body,columnStyles:cols}));y=doc.lastAutoTable.finalY+12;};
+  const outs=st.lines.filter(l=>l._ev.s==='out');
+  if(outs.length)tsec('Lines outside the EPD check',['Line','Bid line','Reason'],outs.map(l=>[lnum(l.n),T(l.desc+' · '+fmt(l.qty,l.qty%1?2:0)+' '+l.unit),T(l._ev.why)]),{0:{cellWidth:11,fontStyle:'bold'},1:{cellWidth:80},2:{cellWidth:'auto'}});
+  const lg=st.log||[];
+  tsec('Reviewer actions (override log)',['When','Line','Action','Reason or evidence'],lg.length?lg.map(x=>[T(dmy(x.at.slice(0,10))+' '+x.at.slice(11,16)+' UTC'),x.n?lnum(x.n):'All',T(x.action),T(x.note||'None given')]):[['','','No reviewer actions were recorded.','']],{0:{cellWidth:38},1:{cellWidth:11,fontStyle:'bold'},2:{cellWidth:58},3:{cellWidth:'auto'}});
+  // scope and limits
   if(y>H-60){doc.addPage();y=22;}
-  doc.setFont('helvetica','bold');doc.setFontSize(12.5);doc.setTextColor(...C.fg);doc.text(sn+'. Assumptions and limits',M,y);y+=6.5;
+  doc.setFont('helvetica','bold');doc.setFontSize(12.5);doc.setTextColor(...C.fg);doc.text(sn+'. Scope and limits',M,y);y+=6.5;
   doc.setFont('helvetica','normal');doc.setFontSize(9.5);
-  const as=['EPD data comes from the EPDesk prototype library, copied by hand from public registries (EPD-Norge, PEP ecopassport, International EPD System, EFObasen, NOBB) in October-November 2026. Check each source link before submission.','The EPD folder holds one summary sheet per EPD, each with a link to the official document.','CO2e uses GWP A1-A3 per declared unit times the conversion to the bid unit. Lines without data or with an expired EPD are left out of the total.'];
+  const as=['EPDesk checked the EPD documentation for each bid line against the requirements listed on page 1. This report is not a certification, and it does not confirm legal or regulatory compliance.','Reviewer actions were recorded in this browser session'+(so?' and signed off by '+so.name+'.':'; the pack is not signed off.'),'Coverage by material value uses quantity x unit price from the bid. Prices are not shown in this report.','EPD data comes from the EPDesk prototype library, copied by hand from public registries (EPD-Norge, PEP ecopassport, International EPD System, EFObasen, NOBB) in October-November 2026. Check each source link before submission.','The EPD folder holds one summary sheet per EPD, each with a link to the official document.','CO2e uses GWP A1-A3 per declared unit times the conversion to the bid unit. Lines without data or with an expired EPD are left out of the total.'];
   st.lines.forEach(l=>{const e=l.pid&&P[l.pid].epd;if(e&&e.convAssumed&&!l.convOk&&l._ev.s!=='missing')as.push(lnum(l.n)+': conversion '+e.convNote+'.');});
   if(R.delAssumed)as.push('Planned delivery '+dmy(R.del)+' is assumed; it was not in the file.');
   as.forEach(t=>{const ls=doc.splitTextToSize('•  '+T(t),CW-2);if(y+ls.length*4.6>H-18){doc.addPage();y=22;}doc.text(ls,M+1,y);y+=ls.length*4.6+1.2;});
@@ -1608,6 +1562,7 @@ async function buildZip(){
   zip.file('2 Bid/'+st.file.name,st.file.bytes);
   zip.file('3 Report/'+reportName(),buildReport().output('arraybuffer'));
   zip.file('READ ME.txt','EPDesk EPD pack\r\n\r\nStatus: '+(so?'reviewed by '+so.name+' on '+dmy(so.date):'draft, not reviewed')+'\r\n\r\n1 EPDs   one summary sheet per EPD, named by bid line, with a link to the official document'+(so?'':'; lines not yet reviewed are in a subfolder')+'\r\n2 Bid    your bid file, returned unchanged\r\n3 Report EPD coverage report: statuses, CO2e, gaps, supplier requests, assumptions\r\n\r\nPrototype: EPD data was copied from public registries in October-November 2026. Check each source link before submission.\r\n');
+  if(st.map&&st.map.price!=null)zip.file('2 Bid/READ FIRST - this folder holds prices.txt','This folder holds your bid file, unchanged, including unit prices.\r\nRemove this folder before you forward the pack outside your company.\r\n');
   return zip.generateAsync({type:'blob',compression:'DEFLATE'});
 }
 
@@ -1654,8 +1609,10 @@ document.addEventListener('click',e=>{
   if(act==='sample'){loadSample();return;}
   if(act==='retry'){runReading();return;}
   if(act==='back-preview'){runId++;renderPreview();screen('preview');return;}
-  if(act==='confirm-suggested'){const sg=suggested(),b=st.stats.c.ready;sg.forEach(l=>{l.confirmed=true;});changed();renderReview();toast(sg.length+' matches confirmed · '+(st.stats.c.ready-b)+' more lines ready');return;}
-  if(act==='reset-rules'){st.R=Object.assign({},st.R0,{src:Object.assign({},st.R0.src)});changed();renderReview();return;}
+  if(act==='confirm-suggested'){const sg=suggested(),b=st.stats.c.ready;sg.forEach(l=>{l.confirmed=true;logAct(l,'Match confirmed','Confirmed together with '+(sg.length-1)+' other suggested matches');});changed();renderReview();toast(sg.length+' matches confirmed · '+(st.stats.c.ready-b)+' more lines ready');return;}
+  if(act==='reset-rules'){st.R=cloneR(st.R0);logAct(null,'Requirements reset to the file');changed();renderReview();return;}
+  if(act==='confirm-reqs'){const was=st.R.unconfirmed.slice();confirmRequirements(st.R);logAct(null,'Requirements confirmed',was.join('; '));changed();renderReview();toast('Requirements confirmed');return;}
+  if(act==='np-all'){const ls=npSuggested();ls.forEach(l=>{l.notProduct='Not a product: reads as labour, freight or a service';logAct(l,'Marked as not a product','Suggested from the description');});changed();renderReview();toast(ls.length+' line'+(ls.length===1?'':'s')+' taken out of scope');return;}
   if(act==='goto-review'){st.filter='review';renderReview();screen('review');return;}
   if(act==='undo-signoff'){st.signoff=null;renderPack();return;}
   if(act==='signoff'){
@@ -1697,6 +1654,9 @@ document.addEventListener('change',e=>{
     const k=el.dataset.rule;
     if(k==='del'){if(!el.value)return;st.R.del=el.value;st.R.delAssumed=false;}
     else st.R[k]=el.checked;
+    if(st.R.prov[k]){st.R.prov[k]='confirmed';st.R.src[k]='Set by the reviewer';}
+    refreshUnconfirmed(st.R);
+    if(st.view==='review')logAct(null,'Requirement changed',k+' = '+(k==='del'?dmy(st.R.del):st.R[k]?'yes':'no'));
     if(st.view==='review'){changed();renderReview();const again=document.getElementById(el.id);if(again)again.focus();}
     else if(st.view==='preview'){renderPreview();const again=document.getElementById(el.id);if(again)again.focus();}
   }
@@ -1732,7 +1692,8 @@ function view(v){
 window.addEventListener('hashchange',()=>view(location.hash==='#how'?'how':'check'));
 screen('upload');
 if(location.hash==='#how')view('how');
-window.__epdesk={st,openFile,loadSample,evaluate};
+window.__epdesk={st,openFile,loadSample,evaluate,compute,RULES};
+if(!RULES)showError('<b>The rules engine did not load.</b> Reload the page. No bid can be checked without it.');
 })();
 </script>
 
