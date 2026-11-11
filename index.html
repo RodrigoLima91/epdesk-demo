@@ -1,0 +1,1721 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>EPDesk Bid Demo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a calm Nordic project workspace. Sticky top bar, a three-step stepper (Upload, Review, Pack), then one screen at a time. Evidence opens in a side panel. */
+:root{
+  --bg:#F5F6F2; --surface:#FFFFFF; --surface-2:#EEF1EC; --line:#DDE3DD; --line-strong:#C6CFC8;
+  --fg:#24332F; --muted:#5C6A64; --accent:#216B5E; --accent-hover:#1A574C; --accent-ink:#FFFFFF; --accent-soft:#E7F0EA;
+  --ok:#2B6B47; --ok-soft:#E3F0E6; --warn:#85581A; --warn-mark:#9C6A1A; --warn-soft:#FFF2D8;
+  --bad:#A74640; --bad-soft:#FCE8E5; --exp:#8C4A2F; --exp-soft:#F8E6DC;
+  --backdrop:rgba(28,40,36,.36); --shadow:0 1px 2px rgba(36,51,47,.05),0 6px 20px rgba(36,51,47,.06);
+  --f-head:"Manrope","DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-ui:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121816; --surface:#19211F; --surface-2:#212B28; --line:#2E3A36; --line-strong:#3D4B46;
+  --fg:#E3EAE6; --muted:#A3B0AA; --accent:#6CC3AE; --accent-hover:#88D2C0; --accent-ink:#0B1F1A; --accent-soft:#1D3530;
+  --ok:#8AD4A6; --ok-soft:#18301F; --warn:#EDBE6A; --warn-mark:#E2B25A; --warn-soft:#382A11;
+  --bad:#F2A097; --bad-soft:#3D1E1B; --exp:#EBAA8C; --exp-soft:#3A2218;
+  --backdrop:rgba(0,0,0,.55); --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.3); color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#121816; --surface:#19211F; --surface-2:#212B28; --line:#2E3A36; --line-strong:#3D4B46;
+  --fg:#E3EAE6; --muted:#A3B0AA; --accent:#6CC3AE; --accent-hover:#88D2C0; --accent-ink:#0B1F1A; --accent-soft:#1D3530;
+  --ok:#8AD4A6; --ok-soft:#18301F; --warn:#EDBE6A; --warn-mark:#E2B25A; --warn-soft:#382A11;
+  --bad:#F2A097; --bad-soft:#3D1E1B; --exp:#EBAA8C; --exp-soft:#3A2218;
+  --backdrop:rgba(0,0,0,.55); --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.3); color-scheme:dark;}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-head);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:30px;font-weight:700;line-height:1.2}
+h2{font-size:20px;font-weight:700;line-height:1.3}
+h3{font-size:16px;font-weight:700;line-height:1.35}
+p{margin:0}
+a{color:var(--accent)}
+.mono{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.ic{width:16px;height:16px;flex:none;display:inline-block;vertical-align:-3px}
+
+/* header */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.topbar{display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;padding-block:12px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--f-head);font-weight:800;font-size:20px;letter-spacing:-.01em;color:var(--fg)}
+.logo svg{width:28px;height:28px;color:var(--accent)}
+.tag-demo{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--surface-2);color:var(--muted);cursor:help}
+nav.views{margin-left:auto;display:flex;gap:4px}
+nav.views button{font:inherit;font-size:14px;font-weight:600;border:0;background:none;color:var(--muted);padding:8px 12px;border-radius:8px;cursor:pointer}
+nav.views button:hover{color:var(--fg);background:var(--surface-2)}
+nav.views button[aria-current="page"]{color:var(--fg);background:var(--accent-soft)}
+.demo-note{background:var(--warn-soft);color:var(--warn);border-bottom:1px solid var(--line)}
+.demo-note .wrap{display:flex;gap:10px;align-items:flex-start;padding-block:9px;font-size:13.5px;line-height:1.45}
+.demo-note b{font-weight:700}
+
+/* buttons */
+.btn{font:inherit;font-size:14px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;padding:9px 16px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn.secondary{background:var(--surface);color:var(--accent);border-color:var(--line-strong)}
+.btn.secondary:hover{background:var(--accent-soft);border-color:var(--accent)}
+.btn.quiet{background:transparent;border-color:transparent;color:var(--accent);padding-inline:10px}
+.btn.quiet:hover{background:var(--accent-soft)}
+.btn.big{font-size:15.5px;padding:12px 22px}
+.btn.sm{font-size:13px;padding:6px 12px;border-radius:8px}
+.btn:disabled,.btn[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* stepper */
+.stepper{list-style:none;margin:0;padding:22px 0 6px;display:flex;align-items:center;gap:0;flex-wrap:wrap}
+.stepper li{display:flex;align-items:center}
+.stepper li+li::before{content:"";width:48px;height:2px;background:var(--line-strong);margin:0 12px;border-radius:2px}
+.stepper li.done+li::before{background:var(--accent)}
+.step{display:flex;align-items:center;gap:10px;font:inherit;background:none;border:0;padding:4px 6px;color:var(--muted);cursor:default;border-radius:8px}
+button.step:not(:disabled){cursor:pointer}
+button.step:not(:disabled):hover{background:var(--surface-2)}
+.step .n{width:28px;height:28px;border-radius:50%;border:2px solid var(--line-strong);display:grid;place-items:center;font-weight:700;font-size:13px;font-family:var(--f-head);background:var(--surface)}
+.step .lbl{display:grid;line-height:1.2;text-align:left}
+.step .lbl b{font-family:var(--f-head);font-weight:700;font-size:15px;color:inherit}
+.step .lbl small{font-size:12px;color:var(--muted)}
+li.current .step{color:var(--fg)}
+li.current .step .n{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+li.done .step{color:var(--fg)}
+li.done .step .n{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+@media (max-width:560px){.stepper li+li::before{width:16px;margin:0 6px}.step .lbl small{display:none}}
+
+main{padding-block:16px 72px}
+.screen{display:grid;gap:22px;min-width:0}
+.pagehead{display:grid;gap:6px;max-width:78ch}
+.pagehead p{color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:14px;min-width:0;align-content:start}
+.panel.flat{border:0;background:transparent;padding:0}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.chip.demo{background:var(--warn-soft);color:var(--warn)}
+.chip.inv{background:var(--surface-2);color:var(--muted)}
+.chip.pub{background:var(--accent-soft);color:var(--accent)}
+
+/* upload */
+.upgrid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.upgrid{grid-template-columns:1fr}}
+.drop{border:2px dashed var(--line-strong);border-radius:16px;background:var(--surface);padding:36px 24px 32px;display:grid;justify-items:center;text-align:center;gap:12px;transition:border-color .15s,background-color .15s;min-width:0;box-shadow:var(--shadow)}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop .art{width:min(260px,80%);height:auto;color:var(--accent)}
+.drop h1{font-size:28px}
+.drop .lead{color:var(--muted);max-width:46ch}
+.formats{font-size:13px;color:var(--muted)}
+.side{display:grid;gap:16px;min-width:0}
+.list{margin:0;padding-left:18px;display:grid;gap:6px;font-size:14px}
+.err{display:grid;gap:10px;border:1px solid var(--bad);background:var(--bad-soft);color:var(--fg);border-radius:12px;padding:14px 16px;text-align:left;width:100%;max-width:640px}
+.err b{color:var(--bad)}
+
+/* preview */
+.pvgrid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:980px){.pvgrid{grid-template-columns:1fr}}
+.mapgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}
+@media (max-width:640px){.mapgrid{grid-template-columns:1fr 1fr}}
+.field{display:grid;gap:4px;min-width:0;align-content:start}
+.field label{font-size:13px;font-weight:600}
+.field label .req{color:var(--bad);font-weight:700}
+.field select,.field input{font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);color:var(--fg);min-width:0;width:100%}
+.field.miss select{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad)}
+.field .hint{font-size:12px;color:var(--muted)}
+.status-line{display:flex;gap:8px;align-items:flex-start;font-size:14px}
+.status-line.ok{color:var(--ok)} .status-line.warn{color:var(--warn)} .status-line.bad{color:var(--bad)}
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--surface-2);white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.more{font-size:13px;color:var(--muted);padding:8px 12px}
+.metagrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.metagrid{grid-template-columns:1fr}}
+.rules{display:grid;gap:8px}
+.rule{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;align-items:start;padding:10px 12px;border-radius:10px;background:var(--surface-2)}
+.rule input[type=checkbox]{width:17px;height:17px;margin:2px 0 0;accent-color:var(--accent)}
+.rule label{font-weight:600;font-size:14px;cursor:pointer}
+.rule .src{grid-column:2;font-size:12.5px;color:var(--muted)}
+.rule input[type=date]{font:inherit;font-size:13.5px;padding:4px 8px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);color:var(--fg)}
+.notice{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:10px;font-size:14px;line-height:1.45}
+.notice.warn{background:var(--warn-soft);color:var(--fg)} .notice.warn .ic{color:var(--warn-mark)}
+.notice.info{background:var(--accent-soft);color:var(--fg)} .notice.info .ic{color:var(--accent)}
+.notice.bad{background:var(--bad-soft);color:var(--fg)} .notice.bad .ic{color:var(--bad)}
+.actionbar{position:sticky;bottom:0;z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:var(--shadow)}
+.actionbar .note{font-size:13px;color:var(--muted)}
+
+/* reading */
+.reading{width:100%;max-width:680px;margin:6px auto 0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:26px;display:grid;gap:18px;box-shadow:var(--shadow)}
+.reading h1{font-size:24px;overflow-wrap:anywhere}
+.progress{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--accent);border-radius:4px;transition:width .3s ease}
+.rsteps{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.rsteps li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:12px;align-items:start;color:var(--muted)}
+.rsteps b{font-weight:600;font-size:15px}
+.rsteps small{display:block;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.rsteps li.on,.rsteps li.done{color:var(--fg)}
+.rico{width:22px;height:22px;border-radius:50%;border:2px solid var(--line-strong);display:grid;place-items:center;margin-top:1px}
+.rsteps li.on .rico{border-color:var(--accent);border-right-color:transparent}
+.rsteps li.done .rico{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.rsteps li.done .rico svg{width:13px;height:13px}
+@media (prefers-reduced-motion:no-preference){.rsteps li.on .rico{animation:spin .9s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}}
+.log{font-family:var(--f-mono);font-size:12px;background:var(--surface-2);border-radius:10px;padding:10px 12px;height:150px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:3px;color:var(--muted)}
+.log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.log b{color:var(--fg);font-weight:500}
+
+/* status */
+.st{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:13px;padding:3px 10px 3px 8px;border-radius:999px;white-space:nowrap}
+.st .ic{width:15px;height:15px}
+.st.ready{background:var(--ok-soft);color:var(--ok)}
+.st.review{background:var(--warn-soft);color:var(--warn)}
+.st.missing{background:var(--bad-soft);color:var(--bad)}
+.st.expired{background:var(--exp-soft);color:var(--exp)}
+
+/* review */
+.reshead{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-start;justify-content:space-between}
+.bidmeta{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:14px;color:var(--muted)}
+.bidmeta b{color:var(--fg);font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,1.3fr);gap:10px}
+@media (max-width:1000px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.tiles .co2{grid-column:1/-1}}
+.tile{font:inherit;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;display:grid;gap:2px;cursor:pointer;color:var(--fg);min-width:0;position:relative}
+.tile:hover{border-color:var(--line-strong)}
+.tile[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-soft)}
+.tile .k{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.tile .v{font-family:var(--f-head);font-size:28px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile .s{font-size:12.5px;color:var(--muted)}
+.tile.ready .k{color:var(--ok)} .tile.review .k{color:var(--warn)} .tile.missing .k{color:var(--bad)} .tile.expired .k{color:var(--exp)}
+.tile.co2{cursor:default}
+.tile.co2:hover{border-color:var(--line)}
+.cov{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;margin-top:6px}
+.cov i{display:block;height:100%;background:var(--accent)}
+.filterbar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
+.filterbar .showing{font-size:14px;color:var(--muted)}
+.filterbar .showing b{color:var(--fg)}
+details.reqbox{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+details.reqbox>summary{list-style:none;cursor:pointer;padding:12px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-weight:600}
+details.reqbox>summary::-webkit-details-marker{display:none}
+details.reqbox>summary .chev{transition:transform .15s;color:var(--muted)}
+details.reqbox[open]>summary .chev{transform:rotate(90deg)}
+details.reqbox .body{padding:0 16px 16px;display:grid;gap:12px}
+.rulegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px}
+.changed{font-size:12.5px;font-weight:600;color:var(--warn)}
+.lines{min-width:980px}
+.lines td{font-size:13.5px}
+.lines tbody tr{cursor:pointer}
+.lines tbody tr:hover td{background:var(--surface-2)}
+.lines tbody tr.sel td{background:var(--accent-soft)}
+.cell{display:grid;gap:3px;min-width:0}
+.cell .main{font-weight:600;color:var(--fg)}
+.cell .sub{font-size:12.5px;color:var(--muted)}
+.lncell{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;align-items:start}
+.cell>.st,.cell>.mt{justify-self:start}
+.lnbtn{padding-top:1px!important;font:inherit;font-family:var(--f-mono);font-size:12.5px;font-weight:500;color:var(--accent);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.mt{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;padding:1px 8px;border-radius:6px;background:var(--surface-2);color:var(--fg);white-space:nowrap}
+.mt.exact{background:var(--accent-soft);color:var(--accent)}
+.mt.unsure{background:var(--warn-soft);color:var(--warn)}
+.mt.alt{background:var(--surface-2);color:var(--fg);outline:1px dashed var(--line-strong)}
+.mt.none{background:var(--bad-soft);color:var(--bad)}
+.next{font-size:13px;font-weight:600;color:var(--fg)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+@media (max-width:1020px){
+  .lines{min-width:0}
+  .lines thead{display:none}
+  .lines,.lines tbody,.lines tr,.lines td{display:block;width:100%}
+  .lines tr{border-bottom:1px solid var(--line);padding:10px 4px}
+  .lines tbody tr:last-child{border-bottom:0}
+  .lines td{border:0;padding:5px 10px;display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px}
+  .lines td::before{content:attr(data-label);font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding-top:2px}
+  .lines td.num{text-align:left}
+}
+
+/* result headline + suggested matches */
+.hero{background:var(--accent-soft);border:1px solid var(--line);border-radius:14px;padding:16px 20px;display:grid;gap:4px}
+.hero-h{font-family:var(--f-head);font-size:22px;font-weight:700;line-height:1.25}
+.hero-h b{color:var(--accent);font-weight:800}
+.hero-s{font-size:15px}
+.hero-s b{font-weight:700}
+.suggest{border-left:4px solid var(--warn-mark)}
+.sugtable td{font-size:13.5px}
+/* drawer */
+.backdrop{position:fixed;inset:0;background:var(--backdrop);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(500px,100%);background:var(--surface);z-index:41;display:flex;flex-direction:column;box-shadow:-8px 0 30px rgba(0,0,0,.12);padding-top:env(safe-area-inset-top,0px)}
+.dhead{padding:18px 20px 14px;border-bottom:1px solid var(--line);display:grid;gap:8px;padding-right:max(20px,env(safe-area-inset-right,0px))}
+.dhead .top{display:flex;align-items:flex-start;gap:12px;justify-content:space-between}
+.dclose{font:inherit;border:1px solid var(--line-strong);background:var(--surface);color:var(--fg);width:36px;height:36px;border-radius:10px;display:grid;place-items:center;cursor:pointer;flex:none}
+.dbody{flex:1;overflow:auto;padding:16px 20px 24px;display:grid;gap:20px;align-content:start;padding-right:max(20px,env(safe-area-inset-right,0px))}
+.dfoot{border-top:1px solid var(--line);padding:12px 20px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;flex-wrap:wrap;padding-right:max(20px,env(safe-area-inset-right,0px))}
+.dsec{display:grid;gap:8px}
+.dsec h3{font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-family:var(--f-ui);font-weight:700}
+dl.ev{margin:0;display:grid;grid-template-columns:minmax(120px,40%) minmax(0,1fr);gap:7px 12px;font-size:14px}
+dl.ev dt{color:var(--muted)}
+dl.ev dd{margin:0;overflow-wrap:anywhere}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.checks li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;font-size:14px;align-items:start}
+.checks .ic{width:18px;height:18px;margin-top:1px}
+.checks .y{color:var(--ok)} .checks .n{color:var(--bad)} .checks .q{color:var(--warn-mark)} .checks .na{color:var(--muted)}
+blockquote.clause{margin:0;padding:10px 12px;border-left:3px solid var(--line-strong);background:var(--surface-2);border-radius:0 8px 8px 0;font-size:13.5px;line-height:1.55}
+.altcard{border:1px dashed var(--line-strong);border-radius:12px;padding:12px 14px;display:grid;gap:6px}
+pre.letter{margin:0;background:var(--surface-2);border-radius:10px;padding:12px 14px;font:13px/1.55 var(--f-ui);white-space:pre-wrap;max-height:320px;overflow:auto;overflow-wrap:anywhere}
+
+/* pack */
+.banner{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;border-radius:14px;padding:16px 18px}
+.banner.draft{background:var(--warn-soft)}
+.banner.approved{background:var(--ok-soft)}
+.banner .bico{width:28px;height:28px;flex:none}
+.banner.draft .bico{color:var(--warn-mark)} .banner.approved .bico{color:var(--ok)}
+.banner .txt{display:grid;gap:3px;flex:1;min-width:220px}
+.banner .txt b{font-family:var(--f-head);font-size:18px}
+.nosubmit{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--bad);background:var(--bad-soft);padding:4px 10px;border-radius:8px}
+.folders{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.folders{grid-template-columns:1fr}}
+.folder{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:10px;align-content:start;min-width:0}
+.folder .fh{display:flex;gap:10px;align-items:center}
+.folder .fh svg{width:22px;height:22px;color:var(--accent)}
+.files{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:13px;max-height:260px;overflow:auto}
+.files li{display:flex;gap:8px;align-items:baseline;min-width:0}
+.files li span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.files .sub{margin-top:6px;font-weight:600;color:var(--warn)}
+.packgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.packgrid{grid-template-columns:1fr}}
+.signed{display:flex;gap:10px;align-items:center;color:var(--ok);font-weight:600}
+
+/* how it works */
+.howgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+@media (max-width:820px){.howgrid{grid-template-columns:1fr}}
+.flow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+@media (max-width:1000px){.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.mod{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:4px;align-content:start;background:var(--surface)}
+.mod .n{font-family:var(--f-mono);font-size:12px;color:var(--accent)}
+.mod b{font-family:var(--f-head);font-size:15px}
+.mod span{font-size:13px;color:var(--muted)}
+.mod.ai{border-color:var(--accent)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid var(--line-strong);vertical-align:-2px;margin-right:6px}
+.measures td:first-child{font-weight:600;white-space:nowrap}
+.roles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:700px){.roles{grid-template-columns:1fr}}
+.role{background:var(--surface-2);border-radius:10px;padding:12px;display:grid;gap:2px}
+.role b{font-size:14px}
+.role span{font-size:13px;color:var(--muted)}
+.phases{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.phases{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.phases{grid-template-columns:1fr}}
+.phase{border-top:3px solid var(--accent);background:var(--surface);border-radius:0 0 12px 12px;padding:14px;display:grid;gap:6px;align-content:start}
+.phase.now{background:var(--accent-soft)}
+.phase ul,.panel ul.plain{margin:0;padding-left:18px;display:grid;gap:4px;font-size:14px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;z-index:60;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
+@media (prefers-reduced-motion:no-preference){tr.flash td{animation:fl 1.4s ease}@keyframes fl{from{background:var(--accent-soft)}to{background:transparent}}}
+
+/* ===================== Redesign: file-workspace look =====================
+   Inspired by modern file-workspace apps: one strong blue for the main action,
+   warm off-white sidebar, flat white canvas, crisp 1px lines, bold grotesk headlines. */
+:root{
+  --bg:#FFFFFF; --canvas:#F7F5F2; --surface:#FFFFFF; --surface-2:#F7F5F2; --line:#E7E3DD; --line-strong:#CDC6BC;
+  --fg:#1E1919; --muted:#665E5B; --accent:#0061FE; --accent-hover:#0050D6; --accent-ink:#FFFFFF; --accent-soft:#EBF2FF;
+  --ok:#0A7A48; --ok-soft:#E1F3E9; --warn:#8A5300; --warn-mark:#B86E00; --warn-soft:#FFF1D8;
+  --bad:#C3122E; --bad-soft:#FDE8EB; --exp:#7A2EA4; --exp-soft:#F3E9FA;
+  --backdrop:rgba(30,25,25,.38); --shadow:0 1px 2px rgba(30,25,25,.04);
+  --f-head:"Schibsted Grotesk","Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --side:236px; --r:8px; --hero:#1E1919; --hero-ink:#F7F5F2;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#171313; --canvas:#1F1A1A; --surface:#211C1C; --surface-2:#2A2424; --line:#383030; --line-strong:#4B4242;
+  --fg:#F7F5F2; --muted:#B5ACA7; --accent:#4F8DFF; --accent-hover:#74A5FF; --accent-ink:#06132E; --accent-soft:#17264A;
+  --ok:#63D69B; --ok-soft:#13301F; --warn:#F3BA5C; --warn-mark:#F3BA5C; --warn-soft:#3A2A10;
+  --bad:#FF8C9B; --bad-soft:#3E1A20; --exp:#D7A6F6; --exp-soft:#33213F; --backdrop:rgba(0,0,0,.55); --hero:#0B2A66; --hero-ink:#F7F5F2;}}
+:root[data-theme="dark"]{
+  --bg:#171313; --canvas:#1F1A1A; --surface:#211C1C; --surface-2:#2A2424; --line:#383030; --line-strong:#4B4242;
+  --fg:#F7F5F2; --muted:#B5ACA7; --accent:#4F8DFF; --accent-hover:#74A5FF; --accent-ink:#06132E; --accent-soft:#17264A;
+  --ok:#63D69B; --ok-soft:#13301F; --warn:#F3BA5C; --warn-mark:#F3BA5C; --warn-soft:#3A2A10;
+  --bad:#FF8C9B; --bad-soft:#3E1A20; --exp:#D7A6F6; --exp-soft:#33213F; --backdrop:rgba(0,0,0,.55); --hero:#0B2A66; --hero-ink:#F7F5F2;}
+body{font-size:15px;letter-spacing:-.003em}
+h1,h2,h3{letter-spacing:-.02em}
+h1{font-size:34px;font-weight:600;line-height:1.12}
+h2{font-size:20px;font-weight:600}
+h3{font-weight:600}
+.eyebrow{font-size:12px;letter-spacing:.08em;color:var(--muted);font-weight:600}
+
+/* app shell: sidebar on wide screens, top bar on small ones */
+header.top{background:var(--canvas);border-bottom:1px solid var(--line)}
+.logo{font-weight:700;font-size:19px;letter-spacing:-.02em}
+.logo svg{width:26px;height:26px}
+nav.views button{border-radius:6px;font-weight:500;color:var(--fg);display:inline-flex;align-items:center;gap:10px}
+nav.views button .ic{color:var(--muted)}
+nav.views button:hover{background:rgba(30,25,25,.06)}
+nav.views button[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+nav.views button[aria-current="page"] .ic{color:var(--accent)}
+.tag-demo{border-radius:4px;background:transparent;border:1px solid var(--line-strong);font-size:11.5px;letter-spacing:.02em}
+.side-note{display:none}
+@media (min-width:1000px){
+  body{padding-left:var(--side)}
+  header.top{position:fixed;top:0;left:0;bottom:0;width:var(--side);border-bottom:0;border-right:1px solid var(--line)}
+  header.top .wrap{max-width:none;margin:0;padding:22px 14px 18px}
+  header.top .topbar{flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:4px;height:100%}
+  header.top .logo{padding:0 10px}
+  header.top .tag-demo{align-self:flex-start;margin:10px 10px 18px}
+  nav.views{margin-left:0;flex-direction:column;gap:2px}
+  nav.views button{width:100%;padding:10px 12px;font-size:14.5px}
+  .side-note{display:block;margin-top:auto;padding:12px 10px 0;border-top:1px solid var(--line);font-size:12px;line-height:1.45;color:var(--muted)}
+  .wrap{padding-left:40px;padding-right:40px}
+}
+
+/* buttons: one strong blue action, quiet everything else */
+.btn{border-radius:6px;font-weight:600;padding:10px 18px;letter-spacing:-.005em}
+.btn.big{padding:13px 24px;font-size:15.5px}
+.btn.sm{border-radius:5px}
+.btn.secondary{background:var(--surface);color:var(--fg);border-color:var(--line-strong)}
+.btn.secondary:hover{background:var(--surface-2);border-color:var(--fg)}
+.btn.quiet{color:var(--accent)}
+
+/* surfaces */
+main{padding-block:28px 80px}
+.screen{gap:24px}
+.panel{border-radius:var(--r);padding:22px 24px;box-shadow:none}
+.chip{border-radius:4px}
+.notice{border-radius:var(--r)}
+.err{border-radius:var(--r)}
+.field select,.field input{border-radius:6px;padding:9px 11px}
+.field select:focus,.field input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.rule{border-radius:6px}
+.actionbar{border-radius:var(--r);box-shadow:0 -6px 24px rgba(30,25,25,.06)}
+.reading{border-radius:var(--r);box-shadow:none;padding:30px}
+.log{border-radius:6px}
+.progress,.progress i{border-radius:2px}
+.toast{border-radius:6px;background:var(--fg);color:var(--bg)}
+
+/* intro on the first screen */
+.intro{display:grid;gap:12px;max-width:820px;padding:6px 0 4px}
+.intro h1{font-size:44px;font-weight:600;line-height:1.06;letter-spacing:-.03em}
+.intro .lead{font-size:18px;color:var(--muted);max-width:62ch}
+.feats{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:4px;font-size:14px}
+.feats span{display:inline-flex;align-items:center;gap:8px}
+.feats .ic{color:var(--accent)}
+@media (max-width:640px){.intro h1{font-size:32px}.intro .lead{font-size:16px}}
+
+/* upload */
+.drop{border:1.5px dashed var(--line-strong);border-radius:var(--r);background:var(--canvas);box-shadow:none;padding:40px 24px 34px}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop h2{font-size:26px}
+.drop .art{color:var(--accent)}
+
+/* stepper */
+.stepper{padding:0 0 4px}
+.step .n{width:26px;height:26px;border-width:1.5px;font-size:12.5px}
+.stepper li+li::before{height:1.5px}
+
+/* result headline */
+.hero{background:var(--hero);color:var(--hero-ink);border:0;border-radius:var(--r);padding:24px 28px;gap:6px}
+.hero-h{font-size:30px;font-weight:600;letter-spacing:-.025em;color:var(--hero-ink)}
+.hero-h b{color:#8DB6FF;font-weight:700}
+.hero-s{color:rgba(247,245,242,.86);font-size:15.5px}
+.hero-s b{color:#FFFFFF}
+.hero-t{color:rgba(247,245,242,.66);font-size:13px;margin-top:4px}
+
+/* status tiles */
+.tile{border-radius:var(--r);padding:14px 16px;box-shadow:none}
+.tile:hover{border-color:var(--fg)}
+.tile[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-soft)}
+.tile .v{font-size:32px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:normal}
+.lines{min-width:900px}
+.lines th,.lines td{padding:11px 10px}
+.lines th{white-space:normal;vertical-align:bottom}
+@media (min-width:1000px) and (max-width:1399px){:root{--side:208px}.wrap{padding-left:28px;padding-right:28px}}
+.lines th:first-child,.lines td:first-child{padding-left:14px}
+.lines td .sub{overflow-wrap:anywhere}
+.lines th:last-child,.lines td:last-child{width:118px;padding-right:14px}
+.tile.co2{background:var(--surface-2)}
+.cov{border-radius:2px;height:5px}.cov i{border-radius:2px}
+
+/* tables: file-list rows */
+.tablebox{border-radius:var(--r)}
+th{background:var(--surface);font-size:11.5px;letter-spacing:.06em;border-bottom:1px solid var(--line-strong)}
+th,td{padding:12px 14px}
+.lines tbody tr:hover td{background:var(--surface-2)}
+.lines tbody tr.sel td{background:var(--accent-soft)}
+.lnbtn{color:var(--fg);text-decoration:none;background:var(--surface-2);border:1px solid var(--line)!important;border-radius:4px;padding:2px 6px!important;font-weight:600}
+.lnbtn:hover{border-color:var(--accent)!important;color:var(--accent)}
+.st{border-radius:4px;padding:3px 9px 3px 7px;font-size:12.5px}
+.mt{border-radius:4px}
+details.reqbox{border-radius:var(--r)}
+.suggest{border-left:1px solid var(--line);border-top:3px solid var(--accent)}
+
+/* drawer */
+.drawer{width:min(520px,100%);box-shadow:-12px 0 40px rgba(30,25,25,.14)}
+.dhead h2{font-size:22px}
+.dclose{border-radius:6px}
+.altcard{border-radius:var(--r);border-style:solid;background:var(--surface-2)}
+pre.letter{border-radius:6px}
+
+/* pack: folders and files */
+.banner{border-radius:var(--r)}
+.folder{border-radius:var(--r);padding:18px}
+.folder .fh svg{width:30px;height:30px;color:var(--accent)}
+.folder .fh svg path{fill:#B8D1FF;stroke:var(--accent)}
+.files{gap:0}
+.files li{padding:7px 8px;border-radius:4px}
+.files li:hover{background:var(--surface-2)}
+.files li .ic{color:var(--muted)}
+
+/* how it works */
+.mod{border-radius:var(--r);padding:14px}
+.mod.ai{border-color:var(--accent);background:var(--accent-soft)}
+.mod .n{color:var(--accent);font-weight:600}
+</style>
+
+<header class="top">
+  <div class="wrap topbar">
+    <div class="logo">
+      <svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="2" y="2" width="24" height="24" rx="7" fill="currentColor"/><path d="M8 17.5l6 3 6-3M8 13.5l6 3 6-3M8 9.5l6-3 6 3-6 3z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      EPDesk
+    </div>
+    <span class="tag-demo" title="Prototype: EPD data was copied from public registries in October–November 2026. Live registry connections come with the pilot.">Prototype</span>
+    <nav class="views" aria-label="Views">
+      <button id="nav-check" data-view="check" aria-current="page"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 13l2 2 4-4"/></svg>Bid check</button>
+      <button id="nav-how" data-view="how"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.4M12 17v.3"/></svg>How it works</button>
+    </nav>
+    <p class="side-note">Prototype. EPD data copied from public registries in October–November 2026. Live registry connections come with the pilot.</p>
+  </div>
+</header>
+
+<div class="wrap">
+<!-- ================= BID CHECK ================= -->
+<main id="view-check">
+  <ol class="stepper" id="stepper" aria-label="Bid check steps"></ol>
+
+  <!-- 1. Upload -->
+  <section class="screen" id="scr-upload" aria-labelledby="intro-h">
+    <div class="intro">
+      <span class="eyebrow">EPD bid check</span>
+      <h1 id="intro-h">Every EPD in your bid, found and checked in minutes.</h1>
+      <p class="lead">Upload the quote. EPDesk matches each line to its EPD, flags the expired and missing ones, and builds the pack your client asks for.</p>
+      <div class="feats">
+        <span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Matches by E-number, NOBB and article number</span>
+        <span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Checks validity, format and verification</span>
+        <span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Builds the pack and supplier requests</span>
+      </div>
+    </div>
+    <div class="upgrid">
+      <div class="drop" id="drop">
+        <svg class="art" viewBox="0 0 260 120" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 12h50l16 16v80H22z" fill="var(--surface)"/><path d="M72 12v16h16"/>
+          <path d="M32 44h46M32 56h46M32 68h46M32 80h46M32 92h30" opacity=".55"/><path d="M48 38v58" opacity=".35"/>
+          <rect x="108" y="36" width="50" height="62" rx="6" transform="rotate(-9 133 67)" fill="var(--surface)"/>
+          <rect x="116" y="32" width="50" height="62" rx="6" fill="var(--surface)"/>
+          <circle cx="141" cy="47" r="3.5"/><path d="M126 66h30M126 76h22" opacity=".55"/>
+          <path d="M186 90l32-15 32 15-32 15z" fill="var(--surface)"/>
+          <path d="M186 76l32-15 32 15-32 15z" fill="var(--surface)"/>
+          <path d="M186 62l32-15 32 15-32 15z" fill="var(--surface)"/>
+        </svg>
+        <h2 id="up-h">Upload the bid</h2>
+        <p class="lead">EPDesk reads the bid lines and the client's EPD requirements. You check what it found before anything is matched.</p>
+        <label class="btn big" for="file" tabindex="0" id="file-label">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4"/></svg>
+          Choose file
+        </label>
+        <input type="file" id="file" accept=".xlsx,.xls,.csv,text/csv" hidden>
+        <p class="formats">Excel (.xlsx, .xls) or CSV. Drop the file here or choose it. It is read in this browser tab.</p>
+      </div>
+      <div class="side">
+        <div class="panel">
+          <div class="row" style="justify-content:space-between"><h2>No bid at hand?</h2><span class="chip">Sample</span></div>
+          <p class="small">Try an 18-line E&amp;I bid for an industrial process hall, with the client's EPD requirements on a second sheet. The products and EPDs in it are real, taken from public registries.</p>
+          <div class="row">
+            <button class="btn secondary" id="use-sample">Use the sample bid</button>
+            <button class="btn quiet" id="dl-sample" hidden>Download the sample file</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>What the file needs</h2>
+          <ul class="list">
+            <li>A header row with a <b>description</b> column and a <b>quantity</b> column. Unit and product code (E-nr or NOBB) improve matching.</li>
+            <li>Optional: a sheet named <b>EPD requirements</b> or <b>Krav</b> with the client's clause, as text or as rows of requirement and value.</li>
+            <li>Norwegian headers work too: Beskrivelse, Antall, Enhet, E-nr.</li>
+          </ul>
+          <p class="small muted">If the columns aren't found, you can point to them yourself on the next screen.</p>
+        </div>
+      </div>
+    </div>
+    <div class="err" id="up-error" role="alert" hidden></div>
+  </section>
+
+  <!-- 1b. Preview -->
+  <section class="screen" id="scr-preview" hidden aria-labelledby="pv-h">
+    <div class="pagehead">
+      <span class="eyebrow">Step 1 of 3 · Upload</span>
+      <h1 id="pv-h">Check what we found</h1>
+      <p>Nothing has been matched yet. Correct anything that looks wrong, then start the check.</p>
+      <div class="row" id="pv-file"></div>
+    </div>
+    <div class="pvgrid">
+      <div class="panel">
+        <h2>Bid lines</h2>
+        <div id="pv-status"></div>
+        <div class="mapgrid" id="pv-map"></div>
+        <div class="tablebox" id="pv-table"></div>
+      </div>
+      <div class="side">
+        <div class="panel">
+          <h2>Project details</h2>
+          <div class="metagrid" id="pv-meta"></div>
+        </div>
+        <div class="panel">
+          <h2>EPD requirements</h2>
+          <div id="pv-reqnote"></div>
+          <div class="rules" id="pv-rules"></div>
+        </div>
+      </div>
+    </div>
+    <div class="actionbar">
+      <button class="btn big" id="start">Check lines</button>
+      <button class="btn secondary" id="pv-other">Choose a different file</button>
+      <span class="note" id="pv-note"></span>
+    </div>
+  </section>
+
+  <!-- 2. Reading -->
+  <section class="screen" id="scr-reading" hidden aria-labelledby="rd-h">
+    <div class="reading">
+      <div style="display:grid;gap:4px">
+        <span class="eyebrow">Step 2 of 3 · Reading</span>
+        <h1 id="rd-h">Checking the bid</h1>
+        <p class="small muted">Products are matched by code first, then by description. Results appear when every step is done.</p>
+      </div>
+      <div class="progress" role="progressbar" aria-label="Check progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="rd-bar"><i></i></div>
+      <ol class="rsteps" id="rd-steps"></ol>
+      <div class="log" id="rd-log" aria-hidden="true"></div>
+      <div class="notice bad" id="rd-error" role="alert" hidden></div>
+      <div class="row"><button class="btn secondary sm" id="rd-cancel">Cancel and go back</button></div>
+    </div>
+  </section>
+
+  <!-- 2b. Review -->
+  <section class="screen" id="scr-review" hidden aria-labelledby="rv-h">
+    <div class="reshead">
+      <div class="pagehead">
+        <span class="eyebrow">Step 2 of 3 · Review</span>
+        <h1 id="rv-h">Review</h1>
+        <div class="bidmeta" id="rv-meta"></div>
+      </div>
+      <div class="row" id="rv-actions">
+        <button class="btn secondary" id="new-check">Check another bid</button>
+        <button class="btn" id="to-pack">Continue to pack</button>
+      </div>
+    </div>
+    <div id="rv-hero"></div>
+    <div class="tiles" id="tiles" role="group" aria-label="Filter lines by status"></div>
+    <div id="rv-suggest" hidden></div>
+    <details class="reqbox" id="reqbox">
+      <summary><svg class="ic chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg><span>Client requirements</span><span class="small muted" id="req-sum"></span></summary>
+      <div class="body">
+        <p class="small muted">Change a rule to test a Q&amp;A answer from the client. Every line is checked again at once. Your file is not changed.</p>
+        <div class="rulegrid" id="rv-rules"></div>
+        <div class="row" id="req-reset-row"></div>
+      </div>
+    </details>
+    <div class="filterbar">
+      <p class="showing" id="showing" aria-live="polite"></p>
+      <p class="small muted">Open a line to see the evidence behind its status.</p>
+    </div>
+    <div class="tablebox"><table class="lines" id="lines" aria-describedby="showing"></table></div>
+  </section>
+
+  <!-- 3. Pack -->
+  <section class="screen" id="scr-pack" hidden aria-labelledby="pk-h">
+    <div class="reshead">
+      <div class="pagehead">
+        <span class="eyebrow">Step 3 of 3 · Pack</span>
+        <h1 id="pk-h">Pack</h1>
+        <p>See what goes into the pack before you download it.</p>
+      </div>
+      <div class="row"><button class="btn secondary" id="back-review">Back to review</button></div>
+    </div>
+    <div id="pk-banner"></div>
+    <div class="folders" id="pk-folders"></div>
+    <div class="packgrid">
+      <div class="panel" id="pk-signoff"></div>
+      <div class="panel" id="pk-download"></div>
+    </div>
+  </section>
+</main>
+
+<!-- ================= HOW IT WORKS ================= -->
+<main id="view-how" hidden>
+  <div class="screen">
+    <div class="pagehead">
+      <span class="eyebrow">How it works</span>
+      <h1>From bid lines to a reviewed EPD pack</h1>
+      <p>The EPD belongs to the product and is made by the manufacturer. The installer's work is per bid: match, check, calculate and package. EPDesk does that work and keeps a company library that improves with every bid.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Seven steps from quote to pack</h2>
+      <div class="flow">
+        <div class="mod ai"><span class="n">1</span><b>Quote reader</b><span>Excel or CSV in; lines out with code, text, quantity and unit.</span></div>
+        <div class="mod ai"><span class="n">2</span><b>Product match</b><span>E-number, NOBB and GTIN first. Description matching as a fallback, always confirmed by a person.</span></div>
+        <div class="mod"><span class="n">3</span><b>EPD library</b><span>EPDs linked to products, kept in sync with the registries.</span></div>
+        <div class="mod ai"><span class="n">4</span><b>Clause reader</b><span>Tender text turned into rules: type, standard, verification, validity, GWP.</span></div>
+        <div class="mod"><span class="n">5</span><b>Compliance and CO₂e</b><span>Fixed rules, so every result can be audited. Unit conversion and totals.</span></div>
+        <div class="mod"><span class="n">6</span><b>Pack builder</b><span>EPD files in line order, the bid, and a report with gaps and supplier requests.</span></div>
+        <div class="mod"><span class="n">7</span><b>Review and learn</b><span>A named reviewer signs off; confirmed matches feed the company library.</span></div>
+      </div>
+      <div class="legend"><span><i style="border-color:var(--accent)"></i>Uses AI to read and interpret</span><span><i></i>Fixed rules and data</span></div>
+    </div>
+
+    <div class="howgrid">
+      <div class="panel">
+        <h2>Where an EPD belongs</h2>
+        <div class="tablebox"><table>
+          <thead><tr><th>Layer</th><th>What it holds</th><th>Changes</th></tr></thead>
+          <tbody>
+            <tr><td><b>Product</b></td><td>The manufacturer's EPD: type, standard, operator, validity, declared unit, GWP by module</td><td>Every 5 years or when the product changes</td></tr>
+            <tr><td><b>Company</b></td><td>Your usual products, pre-matched to their EPDs</td><td>Grows with each bid</td></tr>
+            <tr><td><b>Bid</b></td><td>Lines × EPDs × client rules → statuses, CO₂e total, pack</td><td>Every quote</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="panel">
+        <h2>How we handle your files</h2>
+        <ul class="plain">
+          <li>In this prototype, your bid file is read in your browser tab. Nothing is uploaded or stored.</li>
+          <li>In a pilot, we agree with you where files are kept, who can see them and when they are deleted.</li>
+          <li>EPDesk sends nothing to clients or suppliers. You download the pack and send it yourself.</li>
+        </ul>
+        <h3>Rules we work by</h3>
+        <ul class="plain">
+          <li>A line is Ready only with an exact code match or a match a person has confirmed, and only when every requirement passes.</li>
+          <li>Every line shows its source, EPD version and the reason for its status.</li>
+          <li>AI reads the bid and the clause; fixed rules decide the status.</li>
+          <li>A named reviewer signs off before a pack is final.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="small muted">Prototype: matching runs against an EPDesk library of about 20 products, with EPD data copied from public registries (EPD-Norge, PEP ecopassport, International EPD System, EFObasen, NOBB) in October–November 2026. Live registry connections come with the pilot.</p>
+  </div>
+</main>
+</div>
+
+<div class="backdrop" id="backdrop" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="d-title" hidden></aside>
+
+<!-- Libraries: cdnjs first, jsDelivr as a backup if cdnjs is blocked or down -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>window.XLSX||document.write('<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>')</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>window.JSZip||document.write('<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"><\/script>')</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>(window.jspdf&&window.jspdf.jsPDF)||document.write('<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"><\/script>')</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>(window.jspdf&&window.jspdf.jsPDF&&window.jspdf.jsPDF.API.autoTable)||document.write('<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"><\/script>')</script>
+<script>
+(function(){
+'use strict';
+const pad=n=>String(n).padStart(2,'0');
+const TODAY=(()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());})();
+const SAMPLE_NAME='EPDesk sample bid - Process hall 3.xlsx';
+const SAMPLE_B64='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';
+
+// ---------- icons ----------
+const I={
+  ready:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9.5"/></svg>',
+  review:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg>',
+  missing:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg>',
+  expired:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9"/></svg>',
+  check:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  yes:'<svg class="ic y" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9.5"/></svg>',
+  no:'<svg class="ic n" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>',
+  q:'<svg class="ic q" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.3v.4"/></svg>',
+  na:'<svg class="ic na" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/></svg>',
+  warn:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l9.5 17H2.5z"/><path d="M12 10v4.5M12 17.5v.5"/></svg>',
+  info:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>',
+  close:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  folder:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5h7l2 2.5h9v10H3z"/></svg>',
+  doc:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/></svg>',
+  shield:'<svg class="bico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/><path d="M8.5 12.2l2.5 2.5 4.5-5"/></svg>',
+  draft:'<svg class="bico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 13h6M9 17h4"/></svg>'
+};
+const STATUS={
+  ready:{label:'Ready',icon:I.ready,meaning:'Exact or reviewer-confirmed match, and every requirement passes'},
+  review:{label:'Needs review',icon:I.review,meaning:'An EPD was found, but a person must confirm something first'},
+  missing:{label:'Missing',icon:I.missing,meaning:'No acceptable EPD for this line yet'},
+  expired:{label:'Expired',icon:I.expired,meaning:'The EPD has expired or expires before delivery'}
+};
+const ORDER={expired:0,missing:1,review:2,ready:3};
+
+// ---------- EPDesk prototype library: public registry records, copied by hand Oct-Nov 2026 ----------
+const OC='https://materials.oneclicklca.com/en/material/';
+const EFO='https://efobasen.efo.no/API/Produktfiler/LastNed?id=';
+const P={
+ ifsi:{real:true,src:OC+'power-cables-and-wires/6a3fc7a682866921e0e50c9f',brand:'Nexans',name:'FXQJ/IFSI/MCMK HF EMC 1 kV 3x16/16',codes:[],kw:['ifsi'],kconf:.95,epd:{type:'product',std:'EN 50693 (PEP)',op:'PEP ecopassport',id:'NXNS-00404-V01.01-EN',ver:true,until:'2030-01-01',ut:'2030 (5 years from 2025)',untilNote:'Shown as five years from publication; exact date not recorded',du:'1 m',gwp:3.11,conv:1,cu:'m'}},
+ eqlq:{real:true,src:'https://materials.oneclicklca.com/en/manufacturer/nexans',brand:'Nexans',name:'EQLQ EASY 3G1,5 750 V',codes:[],kw:['eqlq'],kconf:.94,epd:{type:'product',std:'EN 50693 (PEP)',op:'PEP ecopassport',id:'NXNS-00091-V02.01-EN',ver:true,until:'2031-01-01',ut:'2031 (5 years from 2026)',untilNote:'Shown as five years from publication; exact date not recorded',du:'1 m',gwp:0.373,conv:1,cu:'m'}},
+ noiklx:{real:true,src:'https://res.cloudinary.com/evoleska/image/upload/v1685524832/nfgnwmyebrdjwokr5m3j.pdf',brand:'NKT',name:'NOIKLX 90 3G1,5',codes:[],kw:['noiklx'],kconf:.96,epd:{type:'product',std:'EN 15804+A2',op:'EPD-Norge',id:'NEPD-4499-3760-EN',ver:true,until:'2028-05-26',du:'1 m',gwp:0.365,conv:1,cu:'m'}},
+ nkt:{real:true,src:OC+'power-cable-with-copper-conductor-and-xlpe-insulation/666c380e84a05a31f5a9cd96',brand:'NKT',name:'1X400+35 NOIK-CU 17,5 kV',codes:[],kw:['noik-cu','1x400'],kconf:.92,epd:{type:'product',std:'EN 15804',op:'EPD-Norge',id:'NEPD-5252-4584-EN',ver:true,until:null,ut:'Issued 2023; expiry not recorded',du:'1 m',gwp:34.1,conv:1,cu:'m'}},
+ rfou:{generic:true,brand:'',name:'Instrument cable RFOU(i) 250 V, NEK 606 S1',codes:[],kw:['rfou'],kconf:.88,epd:null},
+ khf:{real:true,src:EFO+'2239456',brand:'Prysmian',name:'KHF 25 mm² earthing conductor',codes:[],kw:['khf'],kconf:.93,epd:{type:'product',std:'EN 15804+A2',op:'EPD-Norge',id:'NEPD-9680-9373',ver:true,until:'2030-04-10',du:'1 m',gwp:0.936,conv:1,cu:'m'}},
+ mpl:{real:true,src:'https://www.e-nummersok.se/infoDocs/EPD/EPD_0000255.pdf',brand:'MP Bolagen',name:'Cable ladder, pre-galvanised Z4',codes:[],kw:['kabelstige 300'],kconf:.91,epd:{type:'product',std:'EN 15804+A2',op:'International EPD System',id:'EPD-IES-0010314',ver:true,until:'2029-06-28',du:'1 kg (1 t in the EPD)',gwp:2.68,conv:4.0,cu:'m',convAssumed:true,convNote:'4.0 kg per m assumed; confirm on the product datasheet'}},
+ rod:{real:true,src:OC+'hot-dip-galvanized-fully-threaded-rod/6457f3b157b18e5cacc53e53',brand:'Pretec Norge',name:'Hot-dip galvanised threaded rod M10 × 1 m',codes:[],kw:['gjengestang'],kconf:.92,epd:{type:'product',std:'EN 15804+A2',op:'EPD-Norge',id:'NEPD-4029-3065-EN',ver:true,until:null,ut:'Issued 2022; expiry not recorded',du:'1 kg',gwp:4.86,conv:0.48,cu:'pcs',convNote:'0.48 kg per M10 rod, approximate'}},
+ pvc:{real:true,src:OC+'electrical-conduits-from-pvc/64a1aeca81ba8220371633a8',brand:'Pipelife Norge',name:'Plastrør glatte PVC 40 mm',codes:[],kw:['plastrør','rør pvc 40'],kconf:.93,epd:{type:'product',std:'EN 15804',op:'EPD-Norge',id:'NEPD-2728-1429-NO',ver:true,until:null,ut:'Issued 2021; expiry not recorded',du:'1 m',gwp:0.467,conv:1,cu:'m'}},
+ duct:{real:true,listed:'NOBB',src:'https://cdn.byggtjeneste.no/nobb/c2ef6770-a49b-4881-8277-5e3fc6a2c006',brand:'Pipelife Norge',name:'110/3,2-6M PVC kabelrør SN8 rød',codes:[],kw:['kabelrør pvc 110','sn8'],kconf:.95,epd:{type:'product',std:'EN 15804',op:'EPD-Norge',id:'NEPD-2328-1070-NO',ver:true,until:'2025-08-21',du:'1 m',gwp:null,conv:1,cu:'m'}},
+ mbox:{real:true,listed:'EFObasen',src:EFO+'1230500',brand:'Schneider Electric',name:'Mureva junction box IP55, surface mounted',codes:[],kw:['koblingsboks'],kconf:.90,epd:{type:'product',std:'EN 50693 (PEP)',op:'PEP ecopassport',id:'ENVPEP1711008_V1-EN',ver:true,until:'2022-11-01',ut:'11.2022',du:'1 pcs',gwp:0.377,conv:1,cu:'pcs'}},
+ menc:{real:true,src:EFO+'2021966',brand:'Schneider Electric',name:'Mureva waterproof enclosure for modular devices, 1 row, 3 modules',codes:['13975'],kw:['kapsling'],kconf:.9,epd:{type:'product',std:'EN 50693 (PEP)',op:'PEP ecopassport',id:'SCHN-00931-V01.01-EN',ver:true,until:'2028-03-01',ut:'03.2028',du:'1 pcs',gwp:1.22,conv:1,cu:'pcs'}},
+ msock:{real:true,src:'https://sklep.elektrospark.pl/upload/m/download/17855614/pep-ecopassport-schn-00895-v01-01-en.pdf',brand:'Schneider Electric',name:'Mureva socket outlet 16 A, surface mounted (range PEP)',codes:[],kw:['stikkontakt'],kconf:.90,epd:{type:'product',std:'EN 50693 (PEP)',op:'PEP ecopassport',id:'SCHN-00895-V01.01-EN',ver:true,until:'2028-08-01',ut:'08.2028',du:'1 pcs',gwp:0.568,conv:1,cu:'pcs'}},
+ hb:{real:true,src:'https://materials.oneclicklca.com/jp/material/industrial-high-bay-luminaire/6918923111e5d143300e0340',brand:'Glamox',name:'A90-P2 LED 20000 DALI 840 F/OP C4',codes:['A90212132'],kw:['høytak','high-bay'],kconf:.90,epd:{type:'product',std:'EN 15804+A2',op:'EPD-Norge',id:'NEPD-12160-12165',ver:true,until:'2030-01-01',ut:'2030 (5 years from 2025)',untilNote:'Shown as five years from publication; exact date not recorded',du:'1 pcs',gwp:145,conv:1,cu:'pcs'}},
+ panel:{real:true,src:EFO+'2218451',brand:'Glamox',name:'C70-P1280 40/60 LED 5800 DIM',codes:[],kw:['panel','c70'],kconf:.82,epd:{type:'product',std:'EN 15804+A2',op:'EPD-Norge',id:'NEPD-12602-12749',ver:true,until:'2030-10-09',du:'1 pcs',gwp:41.7,conv:1,cu:'pcs'}},
+ em:{generic:true,brand:'',name:'Emergency luminaire, LED, 1 h',codes:[],kw:['nødlys'],kconf:.9,epd:null,alt:'lumis'},
+ lumis:{real:true,src:OC+'emergency-lighting-unit/69c6cae7b704517eaac88fe6',brand:'Glamox',name:'LUMIS 250 E1 emergency luminaire',codes:[],kw:[],epd:{type:'product',std:'EN 15804+A2',op:'EPD-Norge',id:'NEPD-15043-17707',ver:true,until:'2031-01-01',ut:'2031 (5 years from 2026)',untilNote:'Shown as five years from publication; exact date not recorded',du:'1 pcs',gwp:10.6,conv:1,cu:'pcs'}},
+ c60n:{real:true,src:EFO+'2002106',brand:'Schneider Electric',name:'Multi9 C60N 1P C16 (M9F11116)',codes:['M9F11116'],kw:['c60n'],epd:{type:'product',std:'EN 50693 (PEP)',op:'PEP ecopassport',id:'SCHN-00258-V02.01-EN',ver:true,until:'2028-03-01',ut:'03.2028',du:'1 pcs',gwp:0.798,conv:1,cu:'pcs'}},
+ ic60:{real:true,listed:'EFObasen',src:EFO+'1230556',brand:'Schneider Electric',name:'Acti9 iC60N 1P B16 (A9F03116)',codes:['A9F03116'],kw:['ic60n'],epd:{type:'product',std:'PEP (PCR ed3)',op:'PEP ecopassport',id:'SCHN-00212-V01.01-EN',ver:true,until:'2022-08-01',ut:'08.2022',du:'1 pcs',gwp:0.864,conv:1,cu:'pcs'},alt:'ic60b',altLabel:'Use the renewed PEP'},
+ ic60b:{real:true,src:'https://www.se.com/ph/en/download/document/ENVPEP1705002EN',brand:'Schneider Electric',name:'Acti9 iC60N 1P B16 (A9F03116), renewed PEP',codes:[],kw:[],epd:{type:'product',std:'EN 50693 (PEP)',op:'PEP ecopassport',id:'SCHN-00212-V02.01-EN',ver:true,until:'2028-10-01',ut:'10.2028',du:'1 pcs',gwp:0.835,conv:1,cu:'pcs'}}
+};
+const prodName=p=>p?(p.generic?'No product named':p.brand+' '+p.name):'No product found';
+function srcName(p){return p.epd?p.epd.op:'';}
+function originChip(p){return '';}
+function epdVersion(e){const m=e.id.match(/-V(\d+\.\d+)/);return m?'Version '+m[1]+' (from the registration number)':'Not recorded';}
+const TYPE={product:'Product-specific',industry:'Industry average',generic:'Generic data'};
+
+// ---------- helpers ----------
+const $=s=>document.querySelector(s);
+const fmt=(n,d=0)=>Number(n).toLocaleString('en-GB',{minimumFractionDigits:d,maximumFractionDigits:d});
+const dmy=s=>s&&/^\d{4}-\d{2}-\d{2}$/.test(s)?s.split('-').reverse().join('.'):(s||'—');
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function S(v){if(v==null)return '';if(v instanceof Date)return new Date(v.getTime()+12*3600e3).toISOString().slice(0,10);return String(v).trim();}
+function num(v){
+  if(typeof v==='number')return v;
+  let s=S(v).replace(/[\s ]/g,'');
+  if(!s)return NaN;
+  if(/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(s))s=s.replace(/,/g,'');
+  else if(/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s))s=s.replace(/\./g,'').replace(',','.');
+  else s=s.replace(',','.');
+  return /^-?\d*\.?\d+$/.test(s)?parseFloat(s):NaN;
+}
+function parseDate(v){
+  const s=S(v);let m=s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m)return m[1]+'-'+pad(m[2])+'-'+pad(m[3]);
+  m=s.match(/(\d{1,2})[./](\d{1,2})[./](\d{4})/);
+  if(m)return m[3]+'-'+pad(m[2])+'-'+pad(m[1]);
+  return null;
+}
+function addDays(iso,n){const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
+function b64bytes(b){const s=atob(b),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u;}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const REDUCE=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function toast(t){const d=document.createElement('div');d.className='toast';d.setAttribute('role','status');d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2800);}
+function badge(s){const m=STATUS[s];return '<span class="st '+s+'">'+m.icon+m.label+'</span>';}
+function colLetter(i){let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26);}return s;}
+function validTxt(e){return e.ut||dmy(e.until);}
+function validLabel(e){return e.until?'Valid to '+validTxt(e):validTxt(e);}
+function opLabel(p){return p&&p.epd?p.epd.op:'';}
+
+// ---------- reading files ----------
+function decodeText(bytes){
+  let t=new TextDecoder('utf-8').decode(bytes);
+  if(t.includes('\uFFFD')){try{t=new TextDecoder('windows-1252').decode(bytes);}catch(e){}}
+  return t.replace(/^﻿/,'');
+}
+function parseCSV(text){
+  const first=(text.split(/\r?\n/).find(l=>l.trim())||'');
+  const cnt=ch=>first.split(ch).length-1;
+  const d=[';','\t',','].sort((a,b)=>cnt(b)-cnt(a))[0];
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++;}else q=false;}else f+=c;}
+    else if(c==='"')q=true;
+    else if(c===d){row.push(f);f='';}
+    else if(c==='\n'){row.push(f.replace(/\r$/,''));rows.push(row);row=[];f='';}
+    else f+=c;
+  }
+  if(f!==''||row.length){row.push(f.replace(/\r$/,''));rows.push(row);}
+  return rows;
+}
+function loadSheets(name,bytes){
+  let sheets;
+  if(/\.csv$/i.test(name)){
+    sheets=[{name:name.replace(/\.[^.]+$/,''),rows:parseCSV(decodeText(bytes))}];
+  }else{
+    if(typeof XLSX==='undefined')throw {plain:'The Excel reader did not load. Check your connection and reload the page.'};
+    if(/\.xlsx$/i.test(name)&&!(bytes[0]===0x50&&bytes[1]===0x4B))throw {plain:'It has an .xlsx name but is not a real Excel workbook. It may be damaged, or another file type that was renamed.'};
+    let wb;
+    try{wb=XLSX.read(bytes,{type:'array',cellDates:true});}
+    catch(e){throw {plain:'The file could not be opened. It may be password-protected, damaged, or not a real Excel file.'};}
+    sheets=wb.SheetNames.map(n=>({name:n,rows:XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:''})}));
+  }
+  sheets=sheets.filter(s=>s.rows.some(r=>(r||[]).some(c=>S(c))));
+  if(!sheets.length)throw {plain:'The file is empty: no sheet has any text or numbers in it.'};
+  return sheets;
+}
+const RX={
+  desc:/^(description|beskrivelse|tekst|varetekst|produkttekst|varebeskrivelse|item description|product description)\b/i,
+  qty:/^(qty|quantity|antall|mengde|ant\.?)(\s*\(.*\))?$/i,
+  unit:/^(unit|enhet|enh\.?|uom)(\s*\(.*\))?$/i,
+  code:/^(code|kode|e-?nr|e-?nummer|el-?nr|nobb|art\.?\s*nr|artikkel|varenr|item no)/i
+};
+function findHeader(rows){
+  for(let r=0;r<Math.min(rows.length,60);r++){
+    const c={};
+    (rows[r]||[]).forEach((v,i)=>{const s=S(v);if(!s)return;
+      if(c.desc==null&&RX.desc.test(s))c.desc=i;
+      else if(c.qty==null&&RX.qty.test(s))c.qty=i;
+      else if(c.unit==null&&RX.unit.test(s))c.unit=i;
+      else if(c.code==null&&RX.code.test(s))c.code=i;});
+    if(c.desc!=null&&c.qty!=null)return {r,c};
+  }
+  return null;
+}
+function readLines(rows,hr,map){
+  const out=[];let skipped=0;
+  if(map.desc==null||map.qty==null)return {lines:out,skipped:0};
+  for(let i=hr+1;i<rows.length;i++){
+    const row=rows[i]||[];
+    if(!row.some(c=>S(c)))continue;
+    const desc=S(row[map.desc]);const qty=num(row[map.qty]);
+    if(/^(total|sum|totalt)\b/i.test(desc)||(!desc&&/^(total|sum|totalt)\b/i.test(row.map(S).join(' ').trim())))continue;
+    if(!desc||isNaN(qty)){skipped++;continue;}
+    out.push({code:map.code!=null?S(row[map.code]):'',desc,qty,unit:map.unit!=null?S(row[map.unit]):''});
+  }
+  return {lines:out,skipped};
+}
+const META=[['due',/(bid due|tilbudsfrist|frist|due)/i],['delivery',/(deliver|levering)/i],['quote',/^(quote|tilbud)/i],['project',/^(project|prosjekt)/i],['client',/^(client|kunde|byggherre|oppdragsgiver|customer|main contractor|hovedentrepren)/i]];
+function readMeta(rows){
+  const m={};
+  rows.forEach(row=>{const cells=(row||[]).map(S).filter(Boolean);if(cells.length<2)return;const [k,v]=cells;
+    for(const [key,rx] of META){if(m[key]==null&&rx.test(k)){m[key]=(key==='due'||key==='delivery')?(parseDate(v)||v):v;break;}}});
+  return m;
+}
+const YES=v=>/^(yes|ja|y|true|x|required|påkrevd|krav)$/i.test(v);
+const NO=v=>/^(no|nei|n|false|not accepted|ikke)$/i.test(v);
+function interpret(rows){
+  const R={std:null,ver:null,pep:null,spec:null,del:null,gwp:null,src:{},hits:0,clause:''};
+  const text=[];
+  rows.forEach(row=>{
+    const cells=(row||[]).map(S).filter(Boolean);if(!cells.length)return;
+    cells.forEach(c=>{if(c.length>R.clause.length&&c.length>80)R.clause=c;});
+    text.push(cells.join(' '));
+    if(cells.length<2)return;
+    const label=cells[0],val=cells[1];
+    const set=(k,v)=>{if(R[k]===null){R[k]=v;R.src[k]=label+' = '+val;R.hits++;}};
+    const yn=YES(val)||NO(val);
+    if(/pep|50693/i.test(label)&&yn)set('pep',YES(val));
+    else if(/(product.?specific|produktspesifikk|industry|bransje)/i.test(label)&&yn)set('spec',YES(val));
+    else if(/(third.?party|tredjepart|verifi)/i.test(label)&&yn)set('ver',YES(val));
+    else if(/(valid|gyldig|deliver|lever)/i.test(label)&&parseDate(val))set('del',parseDate(val));
+    else if(/(gwp|a1.?a3|co2|klima)/i.test(label)&&yn)set('gwp',YES(val));
+    else if(/(standard|norm)/i.test(label)&&/15804|50693/.test(val))set('std',val);
+  });
+  const T=text.join(' ');
+  const free=(k,v)=>{if(R[k]===null&&v!=null&&v!==false){R[k]=v;R.src[k]='the clause text';R.hits++;}};
+  if(/15804/.test(T))free('std',/15804\s*\+\s*A2/i.test(T)?'NS-EN 15804+A2':'EN 15804');
+  if(/(tredjepart|third.?party|verifi)/i.test(T))free('ver',true);
+  if(/(pep\b|50693)/i.test(T))free('pep',true);
+  if(/(produktspesifikk|product.?specific)/i.test(T))free('spec',true);
+  const dm=T.match(/(lever\w*|deliver\w*)[^.]{0,80}?(\d{1,2}[./]\d{1,2}[./]\d{4}|\d{4}-\d{2}-\d{2})/i);
+  if(dm)free('del',parseDate(dm[2]));
+  if(/(gwp|a1.?a3|klimagass)/i.test(T))free('gwp',true);
+  return R;
+}
+function buildRequirements(sheets,bidIdx,meta){
+  let reqSheets=sheets.filter((s,i)=>i!==bidIdx&&/req|krav|epd|milj|environment|tender|spec/i.test(s.name));
+  if(!reqSheets.length)reqSheets=sheets.filter((s,i)=>i!==bidIdx);
+  let R=interpret(reqSheets.flatMap(s=>s.rows));
+  R.sheet=reqSheets.map(s=>s.name).join(', ');
+  const defaulted=!R.hits;
+  if(defaulted)R={std:null,ver:null,pep:null,spec:null,del:null,gwp:null,src:{},hits:0,clause:'',sheet:''};
+  R.defaulted=defaulted;
+  if(!R.std){R.std='NS-EN 15804+A2';}
+  if(R.ver===null)R.ver=true;
+  if(R.pep===null)R.pep=defaulted?true:false;
+  if(R.spec===null)R.spec=false;
+  if(R.gwp===null)R.gwp=false;
+  if(!R.del){
+    if(meta.delivery&&parseDate(meta.delivery)){R.del=parseDate(meta.delivery);R.src.del='Planned delivery in the project details';}
+    else{R.del=addDays(TODAY,120);R.src.del='Not found in the file; assumed four months from today';R.delAssumed=true;}
+  }
+  return R;
+}
+
+// ---------- matching and rules ----------
+const lc=k=>/^Manufacturer/.test(k||'')?'m'+k.slice(1):k;
+const normCode=s=>String(s||'').toUpperCase().replace(/[\s.]/g,'');
+function match(code,desc){
+  const cn=normCode(code);
+  if(cn){for(const [k,p] of Object.entries(P)){if(p.codes.some(x=>normCode(x)===cn)){
+    const kind=cn.startsWith('DEMO-N')||/^\d{8}$/.test(cn)?'NOBB number':cn.startsWith('DEMO-E')||/^\d{7}$/.test(cn)?'E-number':'Manufacturer article no.';
+    return {pid:k,method:'code',kind,conf:1};}}}
+  const d=String(desc||'').toLowerCase();let best=null;
+  for(const [k,p] of Object.entries(P)){for(const w of p.kw){if(w&&d.includes(w)&&(!best||w.length>best.w.length))best={k,w};}}
+  if(best)return {pid:best.k,method:'description',kw:best.w,conf:P[best.k].kconf||0.86};
+  return {pid:null,method:'none',conf:0};
+}
+function evaluate(l,R){
+  const p=l.pid?P[l.pid]:null,e=p&&p.epd;
+  const checks=[];
+  const add=(state,text)=>checks.push({state,text});
+  // match
+  if(!p)add('no','No product found by code or description');
+  else if(p.generic&&l.method!=='alternative')add('no','The bid line names a product type, not a product');
+  else if(l.method==='code')add('yes','Exact '+lc(l.kind)+' match');
+  else if(l.method==='alternative')add('yes','Alternative product chosen by the reviewer');
+  else if(l.confirmed)add('yes','Description match confirmed by the reviewer');
+  else add('q','Description match at '+Math.round(l.conf*100)+'%, not confirmed');
+  if(e){
+    add(e.ver||!R.ver?'yes':'no',R.ver?(e.ver?'Third-party verified':'Not third-party verified'):'Verification not required');
+    const pep=/PEP/.test(e.std);
+    add(pep&&!R.pep?'no':'yes',pep?(R.pep?'PEP ecopassport accepted for this bid':'PEP ecopassport not accepted for this bid'):'Standard: '+e.std);
+    if(e.type==='generic')add('no','Generic data only, not an EPD');
+    else if(e.type==='industry')add(R.spec?'q':'yes',R.spec?'Industry-average EPD; the client asks for product-specific':'Industry-average EPD accepted for this bid');
+    else add('yes','Product-specific EPD');
+    if(!e.until)add(l.validityChecked?'yes':'q',l.validityChecked?'Validity checked at the source by the reviewer':'Expiry date not recorded; check that it covers delivery on '+dmy(R.del));
+    else if(e.until<TODAY)add('no','Expired '+validTxt(e));
+    else if(e.until<R.del)add('no','Valid until '+validTxt(e)+', before delivery on '+dmy(R.del));
+    else add('yes','Valid until '+validTxt(e)+', after delivery on '+dmy(R.del));
+    if(e.convAssumed)add(l.convOk?'yes':'q',l.convOk?'Unit conversion confirmed by the reviewer':'Unit conversion assumed: '+e.convNote);
+    else if(e.conv!==1)add('yes','Unit conversion: '+e.convNote);
+  }
+  const base={checks};
+  if(l.excluded)return Object.assign(base,{s:'missing',t:'Excluded by reviewer',why:l.excluded,next:'Supplier request goes in the report'});
+  if(!p)return Object.assign(base,{s:'missing',t:'No product match',why:'No product was found by code or description in the EPDesk library.',next:'Identify the product'});
+  if(p.generic&&!e)return Object.assign(base,{s:'missing',t:'No product named',why:'The bid line describes a product type, not a specific product, so no EPD can be linked yet.',next:p.alt?'Use the suggested product':'Ask the supplier for a product with an EPD'});
+  if(!e)return Object.assign(base,{s:'missing',t:'No EPD found',why:'No EPD or PEP for this product in the EPDesk library.',next:p.alt?'Use the suggested alternative':'Request an EPD from the supplier'});
+  if(e.type==='generic')return Object.assign(base,{s:'missing',t:'Generic data only',why:'Only a generic dataset exists. It is not accepted as an EPD.',next:'Request a product-specific EPD'});
+  if(R.ver&&!e.ver)return Object.assign(base,{s:'missing',t:'Not verified',why:'The EPD is not third-party verified.',next:'Request a verified EPD'});
+  if(/PEP/.test(e.std)&&!R.pep)return Object.assign(base,{s:'missing',t:'Format not accepted',why:'This is a PEP ecopassport, and the client does not accept PEP for this bid.',next:'Request an EPD to '+R.std});
+  if(e.until&&e.until<TODAY)return Object.assign(base,{s:'expired',t:'Expired',why:'The EPD expired '+validTxt(e)+'.',next:p.alt&&l.pid===l.origPid?(p.altLabel||'Use the suggested alternative'):'Request the renewed EPD'});
+  if(e.until&&e.until<R.del)return Object.assign(base,{s:'expired',t:'Expires before delivery',why:'Valid until '+validTxt(e)+'; delivery is '+dmy(R.del)+'.',next:'Ask the supplier for the renewal date'});
+  const open=[];
+  if(l.method==='description'&&!l.confirmed)open.push(['Match not confirmed','Matched on the description at '+Math.round(l.conf*100)+'% confidence.','Confirm the product match']);
+  if(e.type==='industry'&&R.spec)open.push(['Industry-average EPD','The client asks for product-specific EPDs; an industry average needs their approval.',p.alt&&l.pid===l.origPid?'Use the product-specific alternative':'Ask the client in Q&A']);
+  if(!e.until&&!l.validityChecked)open.push(['Validity not confirmed','The expiry date is not recorded ('+e.ut+').','Check validity at the source']);
+  if(e.convAssumed&&!l.convOk)open.push(['Conversion assumed',e.convNote+'.','Confirm the unit conversion']);
+  if(open.length)return Object.assign(base,{s:'review',t:open[0][0],why:open.map(o=>o[1]).join(' '),next:open[0][2],open});
+  return Object.assign(base,{s:'ready',t:'Ready',why:'Every requirement passes.',next:'—'});
+}
+const altOf=l=>{const p=l.pid?P[l.pid]:null;return p&&p.alt&&l.pid===l.origPid&&l._ev&&l._ev.s!=='ready'?P[p.alt]:null;};
+const needsReq=l=>l._ev.s==='missing'||l._ev.s==='expired';
+const lnum=n=>'L'+String(n).padStart(st.lines.length>99?3:2,'0');
+function gwpUnit(p){return p&&p.epd&&p.epd.gwp!=null?p.epd.gwp*p.epd.conv:null;}
+
+// ---------- state ----------
+const st={view:'upload',file:null,sheets:[],sheetIdx:0,hr:0,map:{},meta:{},R:null,R0:null,lines:[],filter:'review',signoff:null,stats:null,drawer:null};
+function compute(){
+  const c={ready:0,review:0,missing:0,expired:0},cov={n:0,kg:0};
+  st.lines.forEach(l=>{l._ev=evaluate(l,st.R);const p=l.pid?P[l.pid]:null;l._gu=gwpUnit(p);l._kg=l._gu!=null?l._gu*l.qty:null;
+    c[l._ev.s]++;
+    if(l._kg!=null&&(l._ev.s==='ready'||l._ev.s==='review')){cov.n++;cov.kg+=l._kg;}});
+  st.stats={c,cov};
+}
+function changed(){
+  if(st.signoff){st.signoff=null;toast('Sign-off removed because the results changed');}
+}
+
+// ---------- stepper ----------
+function renderStepper(){
+  const v=st.view,has=st.lines.length&&st.stats;
+  const cur=v==='upload'||v==='preview'?0:v==='reading'||v==='review'?1:2;
+  const steps=[['Upload',v==='preview'?'Check the file':'Bid file'],['Review',v==='reading'?'Reading…':'Statuses and evidence'],['Pack','Contents and sign-off']];
+  $('#stepper').innerHTML=steps.map((s,i)=>{
+    const cls=i<cur?'done':i===cur?'current':'';
+    const can=has&&v!=='reading'&&((i===1&&v==='pack')||(i===2&&v==='review'));
+    const tag=can?'button':'div';
+    return '<li class="'+cls+'"'+(i===cur?' aria-current="step"':'')+'><'+tag+' class="step"'+(can?' data-goto="'+(i===1?'review':'pack')+'"':'')+'><span class="n">'+(i<cur?I.check:(i+1))+'</span><span class="lbl"><b>'+s[0]+'</b><small>'+s[1]+'</small></span></'+tag+'></li>';
+  }).join('');
+}
+function screen(name){
+  st.view=name;
+  ['upload','preview','reading','review','pack'].forEach(n=>{$('#scr-'+n).hidden=n!==name;});
+  renderStepper();
+  window.scrollTo(0,0);
+}
+
+// ---------- upload ----------
+function showError(html){const e=$('#up-error');e.innerHTML=html;e.hidden=!html;}
+function fileError(name,plain){
+  showError('<b>We couldn\'t read "'+esc(name)+'".</b><p>'+esc(plain)+'</p><p class="small">Try saving it again as .xlsx from Excel, or export it as CSV. If the bid is only on paper or in a PDF, EPDesk cannot read it yet.</p><div class="row"><label class="btn sm" for="file">Choose another file</label><button class="btn secondary sm" data-act="sample">Use the sample bid</button></div>');
+  $('#up-error').scrollIntoView({block:'nearest',behavior:REDUCE?'auto':'smooth'});
+}
+function openFile(name,bytes,isDemo){
+  showError('');
+  let sheets;
+  try{sheets=loadSheets(name,bytes);}
+  catch(err){fileError(name,err&&err.plain?err.plain:'The file could not be opened.');if(st.view!=='upload')screen('upload');return;}
+  st.file={name,bytes,isDemo:!!isDemo};st.sheets=sheets;st.signoff=null;st.lines=[];st.stats=null;
+  // detect
+  let best=null;
+  sheets.forEach((s,i)=>{const h=findHeader(s.rows);if(!h)return;const r=readLines(s.rows,h.r,h.c);if(!best||r.lines.length>best.n)best={i,h,n:r.lines.length};});
+  if(best){st.sheetIdx=best.i;st.hr=best.h.r;st.map=Object.assign({},best.h.c);st.detected=true;}
+  else{
+    let bi=0,bn=-1;sheets.forEach((s,i)=>{const n=s.rows.filter(r=>(r||[]).some(c=>S(c))).length;if(n>bn){bn=n;bi=i;}});
+    st.sheetIdx=bi;const rows=sheets[bi].rows;let hr=rows.findIndex(r=>(r||[]).filter(c=>S(c)).length>=2);st.hr=Math.max(0,hr);st.map={};st.detected=false;
+  }
+  const rows=sheets[st.sheetIdx].rows;
+  st.meta=readMeta(rows.slice(0,st.hr));
+  st.R=buildRequirements(sheets,st.sheetIdx,st.meta);st.R0=Object.assign({},st.R,{src:Object.assign({},st.R.src)});
+  renderPreview();screen('preview');
+}
+function readFile(f){
+  if(!/\.(xlsx|xls|csv)$/i.test(f.name)){fileError(f.name,'This is not an Excel or CSV file. EPDesk reads .xlsx, .xls and .csv.');return;}
+  const r=new FileReader();
+  r.onload=()=>openFile(f.name,new Uint8Array(r.result),false);
+  r.onerror=()=>fileError(f.name,'The browser could not open the file. Try again, or choose another copy.');
+  r.readAsArrayBuffer(f);
+}
+
+// ---------- preview ----------
+function currentRead(){const rows=st.sheets[st.sheetIdx].rows;return readLines(rows,st.hr,st.map);}
+function renderPreview(){
+  const rows=st.sheets[st.sheetIdx].rows,hdr=rows[st.hr]||[];
+  $('#pv-file').innerHTML='<span class="chip">'+I.doc+esc(st.file.name)+'</span>'+(st.file.isDemo?'<span class="chip">Sample bid</span>':'')+'<span class="small muted">'+st.sheets.length+' sheet'+(st.sheets.length>1?'s':'')+'</span>';
+  const ncol=Math.max(0,...rows.slice(st.hr,st.hr+50).map(r=>(r||[]).length));
+  const colOpt=(sel)=>'<option value="">Not in file</option>'+Array.from({length:ncol},(_,i)=>'<option value="'+i+'"'+(sel===i?' selected':'')+'>'+colLetter(i)+(S(hdr[i])?' · '+esc(S(hdr[i]).slice(0,28)):'')+'</option>').join('');
+  const hrOpts=rows.slice(0,Math.min(rows.length,40)).map((r,i)=>{const t=(r||[]).map(S).filter(Boolean).slice(0,3).join(' · ');return t?'<option value="'+i+'"'+(i===st.hr?' selected':'')+'>Row '+(i+1)+': '+esc(t.slice(0,40))+'</option>':'';}).join('');
+  const f=(key,label,req,hint)=>'<div class="field'+(req&&st.map[key]==null?' miss':'')+'"><label for="map-'+key+'">'+label+(req?' <span class="req" aria-hidden="true">*</span>':'')+'</label><select id="map-'+key+'" data-map="'+key+'"'+(req?' aria-required="true"':'')+'>'+colOpt(st.map[key])+'</select>'+(hint?'<span class="hint">'+hint+'</span>':'')+'</div>';
+  $('#pv-map').innerHTML=
+    (st.sheets.length>1?'<div class="field"><label for="map-sheet">Sheet with the bid lines</label><select id="map-sheet" data-map="sheet">'+st.sheets.map((s,i)=>'<option value="'+i+'"'+(i===st.sheetIdx?' selected':'')+'>'+esc(s.name)+'</option>').join('')+'</select></div>':'')+
+    '<div class="field"><label for="map-hr">Header row</label><select id="map-hr" data-map="hr">'+hrOpts+'</select></div>'+
+    f('desc','Description',true)+f('qty','Quantity',true)+f('unit','Unit',false)+f('code','Product code',false,'E-nr, NOBB or article number');
+  const r=currentRead(),ok=st.map.desc!=null&&st.map.qty!=null;
+  let status;
+  if(!ok)status='<div class="notice bad">'+I.warn+'<div><b>Point to the description and quantity columns.</b> We couldn\'t find them automatically. Pick them from the lists below; the preview updates as you choose.</div></div>';
+  else if(!r.lines.length)status='<div class="notice bad">'+I.warn+'<div><b>No bid lines found with these columns.</b> Check the header row and that the quantity column holds numbers.</div></div>';
+  else status='<p class="status-line ok">'+I.ready+'<span><b>'+r.lines.length+' bid lines</b> found on "'+esc(st.sheets[st.sheetIdx].name)+'", under header row '+(st.hr+1)+'.'+(r.skipped?' '+r.skipped+' row'+(r.skipped>1?'s':'')+' without a description or a number in the quantity column will be skipped.':'')+(st.detected?' Columns were detected automatically.':'')+'</span></p>'+(st.map.code==null?'<p class="status-line warn">'+I.warn+'<span>No product code column. Every line will be matched on its description, and each match needs a person to confirm it.</span></p>':'');
+  $('#pv-status').innerHTML=status;
+  const show=r.lines.slice(0,8);
+  $('#pv-table').innerHTML=r.lines.length?'<table><thead><tr><th>#</th><th>Code</th><th>Description</th><th class="num">Qty</th><th>Unit</th></tr></thead><tbody>'+
+    show.map((l,i)=>'<tr><td class="mono">'+(i+1)+'</td><td class="mono">'+(esc(l.code)||'<span class="muted">—</span>')+'</td><td>'+esc(l.desc)+'</td><td class="num mono">'+fmt(l.qty,l.qty%1?2:0)+'</td><td>'+(esc(l.unit)||'<span class="muted">—</span>')+'</td></tr>').join('')+
+    '</tbody></table>'+(r.lines.length>8?'<p class="more">and '+(r.lines.length-8)+' more lines</p>':''):'<p class="empty">No lines to preview yet.</p>';
+  // meta
+  const m=st.meta;
+  const mf=(k,label,type)=>'<div class="field"><label for="meta-'+k+'">'+label+'</label><input id="meta-'+k+'" data-meta="'+k+'" type="'+(type||'text')+'" value="'+esc(type==='date'?(parseDate(m[k])||''):(m[k]||''))+'" placeholder="Not in file"></div>';
+  $('#pv-meta').innerHTML=mf('project','Project')+mf('quote','Quote no.')+mf('client','Client')+mf('due','Bid due','date');
+  // requirements
+  const R=st.R;
+  $('#pv-reqnote').innerHTML=R.defaulted?
+    '<div class="notice warn">'+I.warn+'<div><b>No EPD requirements found in this file.</b> The check will use common Norwegian defaults: a third-party verified EPD to NS-EN 15804+A2, PEP ecopassport accepted, product-specific not required, and valid at the planned delivery date. Change them below, or add a sheet named "EPD requirements" to the file.</div></div>':
+    '<p class="small muted">'+R.hits+' rules read from "'+esc(R.sheet)+'". Check them before you start.</p>';
+  $('#pv-rules').innerHTML=rulesHTML('pv');
+  $('#start').disabled=!(ok&&r.lines.length);
+  $('#start').textContent=ok&&r.lines.length?'Check '+r.lines.length+' lines':'Check lines';
+  $('#pv-note').textContent=ok&&r.lines.length?(R.delAssumed?'Planned delivery was not in the file, so it is set to '+dmy(R.del)+'. Change it under EPD requirements.':''):'Map the description and quantity columns to continue.';
+}
+function rulesHTML(px){
+  const R=st.R,src=k=>R.src[k]?'From the file: '+R.src[k]:(R.defaulted?'Default rule':'Not in the file; default rule');
+  const cb=(k,label,extra)=>'<div class="rule"><input type="checkbox" id="'+px+'-'+k+'" data-rule="'+k+'"'+(R[k]?' checked':'')+'><label for="'+px+'-'+k+'">'+label+'</label><span class="src">'+(extra?extra+' · ':'')+esc(src(k))+'</span></div>';
+  return cb('ver','Third-party verified EPD required','Standard '+esc(R.std))+
+    cb('pep','Accept PEP ecopassport (EN 50693)','Electrical products')+
+    cb('spec','Product-specific EPD required','Industry average only with client approval')+
+    '<div class="rule"><span aria-hidden="true">'+I.expired.replace('class="ic"','class="ic" style="color:var(--muted);margin-top:2px"')+'</span><label for="'+px+'-del">Valid at planned delivery</label><span class="src"><input type="date" id="'+px+'-del" data-rule="del" value="'+esc(R.del)+'"> '+esc(src('del'))+'</span></div>'+
+    cb('gwp','Report total GWP, A1–A3','Total CO₂e is in the report either way');
+}
+
+// ---------- reading ----------
+let runId=0;
+const RSTEPS=['Reading bid lines','Matching products','Checking EPD records','Applying client requirements'];
+function startCheck(){
+  const r=currentRead();if(!r.lines.length)return;
+  const rows=st.sheets[st.sheetIdx].rows;
+  st.lines=r.lines.map((x,i)=>{const m=match(x.code,x.desc);return Object.assign({},x,{n:i+1,pid:m.pid,origPid:m.pid,method:m.method,origMethod:m.method,kind:m.kind,kw:m.kw,conf:m.conf,confirmed:false,convOk:false,validityChecked:false,excluded:null,reqOpen:false});});
+  st.skipped=r.skipped;st.filter='all';st.signoff=null;
+  runReading();
+}
+async function runReading(){
+  const id=++runId,alive=()=>id===runId,t0=performance.now();
+  screen('reading');
+  $('#rd-h').textContent='Checking '+st.file.name;
+  $('#rd-error').hidden=true;
+  $('#rd-steps').innerHTML=RSTEPS.map((s,i)=>'<li id="rs-'+i+'"><span class="rico" aria-hidden="true"></span><div><b>'+s+'</b><small id="rsd-'+i+'">Waiting</small></div></li>').join('');
+  const logEl=$('#rd-log');logEl.innerHTML='';
+  const bar=$('#rd-bar');
+  const prog=f=>{bar.firstElementChild.style.width=Math.round(f*100)+'%';bar.setAttribute('aria-valuenow',String(Math.round(f*100)));};
+  const log=h=>{const d=document.createElement('div');d.innerHTML=h;logEl.appendChild(d);while(logEl.children.length>8)logEl.firstChild.remove();};
+  const set=(i,state,detail)=>{const li=$('#rs-'+i);if(!li)return;li.className=state;li.querySelector('.rico').innerHTML=state==='done'?I.check:'';if(detail!=null)$('#rsd-'+i).textContent=detail;};
+  const k=REDUCE?0.25:1,w=ms=>sleep(ms*k);
+  const L=st.lines;
+  prog(0);
+  try{
+    set(0,'on','Reading '+st.sheets[st.sheetIdx].name);
+    for(let i=0;i<L.length;i++){if(!alive())return;if(i%4===0){set(0,'on',(i+1)+' of '+L.length+' lines read');prog(.25*(i/L.length));await w(70);}}
+    log(L.length+' lines read from "'+esc(st.sheets[st.sheetIdx].name)+'"'+(st.skipped?', '+st.skipped+' skipped':''));
+    set(0,'done',L.length+' lines read'+(st.skipped?' · '+st.skipped+' skipped':''));prog(.25);
+    set(1,'on','Matching by code first, then by description');
+    const per=Math.max(40,Math.min(120,1600/L.length));
+    let nc=0,nd=0,nn=0;
+    for(const l of L){if(!alive())return;
+      const p=l.pid?P[l.pid]:null;
+      if(l.method==='code')nc++;else if(l.method==='description')nd++;else nn++;
+      log(lnum(l.n)+' '+esc(l.desc)+' → '+(p?(p.generic?'product type only, no product named':'<b>'+esc(p.brand)+'</b> ('+(l.method==='code'?esc(l.kind):'description '+Math.round(l.conf*100)+'%')+')'):'no match'));
+      set(1,'on',(nc+nd+nn)+' of '+L.length+' · '+nc+' by exact code · '+nd+' by description');
+      prog(.25+.25*(l.n/L.length));await w(per);}
+    set(1,'done',nc+' by exact code · '+nd+' by description'+(nn?' · '+nn+' not found':''));
+    set(2,'on','Looking up EPD and PEP records');
+    let ne=0;
+    for(const l of L){if(!alive())return;const p=l.pid?P[l.pid]:null;
+      if(p&&p.epd)ne++;
+      log(lnum(l.n)+' '+(p&&p.epd?'<b>'+esc(p.epd.id)+'</b> · '+esc(p.epd.op)+' record':'no EPD record'));
+      set(2,'on',ne+' EPD records found so far');
+      prog(.5+.3*(l.n/L.length));await w(per*.8);}
+    set(2,'done',ne+' EPD records found · '+(L.length-ne)+' without');
+    set(3,'on','Validity, format, verification, type');
+    await w(500);if(!alive())return;
+    compute();
+    const c=st.stats.c;
+    log(c.ready+' ready · '+c.review+' need review · '+c.missing+' missing · '+c.expired+' expired');
+    set(3,'done',c.ready+' ready · '+c.review+' need review · '+c.missing+' missing · '+c.expired+' expired');prog(1);
+    await w(600);if(!alive())return;
+    st.checkSec=Math.max(1,Math.round((performance.now()-t0)/1000));
+    runId++;renderReview();screen('review');
+    const h=$('#rv-h');h.setAttribute('tabindex','-1');h.focus({preventScroll:true});
+  }catch(err){
+    console.error(err);
+    const e=$('#rd-error');e.hidden=false;
+    e.innerHTML=I.warn+'<div><b>The check stopped before it finished.</b> No results are shown, because they would be incomplete. <div class="row" style="margin-top:8px"><button class="btn sm" data-act="retry">Try again</button><button class="btn secondary sm" data-act="back-preview">Back to the file check</button></div></div>';
+  }
+}
+
+// ---------- review ----------
+function reqSummary(){const R=st.R;return (R.ver?'Verified EPDs':'EPDs')+' to '+R.std+' · PEP '+(R.pep?'accepted':'not accepted')+' · product-specific '+(R.spec?'required':'not required')+' · valid at '+dmy(R.del);}
+function renderReview(){
+  compute();
+  const m=st.meta,R=st.R,c=st.stats.c,cov=st.stats.cov,N=st.lines.length||1;
+  $('#rv-h').textContent=m.project||st.file.name.replace(/\.[^.]+$/,'');
+  $('#rv-meta').innerHTML=[
+    m.quote?'<span>Quote <b class="mono">'+esc(m.quote)+'</b></span>':'',
+    m.client?'<span>Client <b>'+esc(m.client)+'</b></span>':'',
+    m.due&&parseDate(m.due)?'<span>Bid due <b>'+dmy(parseDate(m.due))+'</b></span>':'',
+    '<span>Delivery <b>'+dmy(R.del)+'</b></span>',
+    '<span>'+st.lines.length+' lines</span>',
+    st.file.isDemo?'<span class="chip">Sample bid</span>':''].join('');
+  const tile=(s,sub)=>'<button class="tile '+s+'" data-filter="'+s+'" aria-pressed="'+(st.filter===s)+'"><span class="k">'+STATUS[s].icon+STATUS[s].label+'</span><span class="v">'+c[s]+'</span><span class="s">'+sub+'</span></button>';
+  const pct=Math.round(cov.n/N*100);
+  const found=st.lines.filter(l=>{const p=l.pid?P[l.pid]:null;return p&&p.epd;}).length;
+  const exp=st.lines.filter(l=>l._ev.s==='expired'),listed=exp.filter(l=>P[l.pid]&&P[l.pid].listed);
+  const reg=[...new Set(listed.map(l=>P[l.pid].listed))];
+  const bits=[];
+  if(c.expired)bits.push('<b>'+c.expired+' expired EPD'+(c.expired>1?'s':'')+' caught</b>'+(listed.length?' ('+(listed.length===c.expired?(c.expired>1?'all still':'still'):listed.length+' still')+' in '+reg.join(' or ')+')':''));
+  if(c.missing)bits.push('<b>'+c.missing+' gap'+(c.missing>1?'s':'')+'</b>, each with a next step');
+  bits.push('<b>'+c.ready+' line'+(c.ready===1?'':'s')+' ready</b> to attach');
+  $('#rv-hero').innerHTML='<div class="hero"><p class="hero-h">EPDs found for <b>'+found+' of '+st.lines.length+'</b> lines</p><p class="hero-s">'+bits.join(' · ')+'</p>'+(st.checkSec?'<p class="hero-t">Checked in '+st.checkSec+' seconds. By hand, '+st.lines.length+' lines take about '+fmt(st.lines.length*15/60,1)+' hours (15 minutes a line, our estimate).</p>':'')+'</div>';
+  const sug=suggested(),sg=$('#rv-suggest');
+  sg.hidden=!sug.length;
+  sg.innerHTML=sug.length?'<div class="panel suggest"><div class="row" style="justify-content:space-between;align-items:flex-start"><div style="display:grid;gap:4px;max-width:72ch"><h2>Confirm '+sug.length+' suggested match'+(sug.length>1?'es':'')+'</h2><p class="small muted">These lines were matched on the description at 90% or more. Check the pairs, then confirm them together. Lower matches stay for one-by-one review.</p></div><button class="btn" data-act="confirm-suggested">Confirm all '+sug.length+'</button></div><details class="sugpairs"><summary class="small" style="cursor:pointer;font-weight:600;color:var(--accent)">Show the '+sug.length+' pairs</summary><div class="tablebox" style="margin-top:10px"><table class="sugtable"><thead><tr><th scope="col">Line</th><th scope="col">In the bid</th><th scope="col">Matched product</th><th scope="col" class="num">Match</th></tr></thead><tbody>'+sug.map(l=>'<tr><td class="mono">'+lnum(l.n)+'</td><td>'+esc(l.desc)+'</td><td>'+esc(prodName(P[l.pid]))+'</td><td class="num mono">'+Math.round(l.conf*100)+'%</td></tr>').join('')+'</tbody></table></div></details></div>':'';
+  $('#tiles').innerHTML=
+    tile('expired','Caught before submission')+
+    tile('missing','Each with a next step')+
+    tile('review','A person confirms first')+
+    tile('ready','All checks pass')+
+    '<div class="tile co2"><span class="k">CO₂e total, A1–A3</span><span class="v">'+fmt(cov.kg/1000,1)+' t</span><span class="s">From '+cov.n+' of '+st.lines.length+' lines ('+pct+'%). Missing and expired lines are left out.</span><span class="cov" aria-hidden="true"><i style="width:'+pct+'%"></i></span></div>';
+  // requirements box
+  const ch=['pep','spec','del','ver','gwp'].some(k=>st.R[k]!==st.R0[k]);
+  $('#req-sum').textContent=reqSummary()+(R.defaulted?' · default rules':'');
+  $('#rv-rules').innerHTML=rulesHTML('rv');
+  $('#req-reset-row').innerHTML=ch?'<span class="changed">Rules changed here; the file is unchanged.</span><button class="btn secondary sm" data-act="reset-rules">Reset to the rules from the file</button>':'';
+  renderLines();
+}
+function suggested(){return st.lines.filter(l=>l.method==='description'&&!l.confirmed&&!l.excluded&&l.conf>=0.9&&l.pid&&!P[l.pid].generic&&l._ev&&l._ev.s==='review');}
+function renderLines(){
+  const f=st.filter;
+  let ls=st.lines.slice();
+  if(f!=='all')ls=ls.filter(l=>l._ev.s===f);
+  ls.sort((a,b)=>ORDER[a._ev.s]-ORDER[b._ev.s]||a.n-b.n);
+  const c=st.stats.c;
+  $('#showing').innerHTML=f==='all'?'Showing <b>all '+st.lines.length+' lines</b>, problems first. Choose a status above to filter.':
+    'Showing <b>'+ls.length+' line'+(ls.length===1?'':'s')+' marked '+STATUS[f].label+'</b>. '+{review:'An EPD was found, but a person must confirm something first.',missing:'No acceptable EPD for these lines yet.',expired:'The EPD has expired or expires before delivery.',ready:'Exact or reviewer-confirmed match, and every requirement passes.'}[f]+' <button class="btn quiet sm" data-filter="all">Show all '+st.lines.length+'</button>';
+  const head='<thead><tr><th scope="col">Bid line, product and code</th><th scope="col" class="num">Qty</th><th scope="col">Match</th><th scope="col">EPD source, type and validity</th><th scope="col">Requirement result</th><th scope="col" class="num">CO₂e</th><th scope="col">Next action</th></tr></thead>';
+  if(!ls.length){
+    $('#lines').innerHTML=head+'<tbody><tr><td colspan="7"><p class="empty">'+(f==='review'?'Nothing needs review. ':'No lines with this status. ')+'<button class="btn quiet sm" data-filter="all">Show all lines</button></p></td></tr></tbody>';return;
+  }
+  $('#lines').innerHTML=head+'<tbody>'+ls.map(rowHTML).join('')+'</tbody>';
+}
+function matchHTML(l){
+  if(!l.pid)return '<span class="mt none">'+I.missing+'No match</span><span class="sub">Searched code and description</span>';
+  if(P[l.pid].generic)return '<span class="mt none">'+I.missing+'Type only</span><span class="sub">No product named in the bid</span>';
+  if(l.method==='code')return '<span class="mt exact">'+I.check+'Exact code</span><span class="sub">'+esc(l.kind)+' <span class="mono">'+esc(l.code)+'</span></span>';
+  if(l.method==='alternative')return '<span class="mt alt">Alternative</span><span class="sub">Chosen by the reviewer</span>';
+  return l.confirmed?'<span class="mt exact">'+I.check+'Description</span><span class="sub">Confirmed by the reviewer ('+Math.round(l.conf*100)+'%)</span>':'<span class="mt unsure">'+I.q.replace('class="ic q"','class="ic"')+'Description, '+Math.round(l.conf*100)+'%</span><span class="sub">Keyword "'+esc(l.kw)+'"; not confirmed</span>';
+}
+function rowHTML(l){
+  const p=l.pid?P[l.pid]:null,e=p&&p.epd,ev=l._ev;
+  const prod=p?(p.generic?'<span class="muted">No product named in the bid</span>':esc(prodName(p))):'<span class="muted">No product found</span>';
+  const epd=e?'<span class="main">'+esc(opLabel(p))+'</span><span class="sub">'+TYPE[e.type]+' · <span class="mono">'+esc(e.id)+'</span></span><span class="sub">'+esc(validLabel(e))+'</span>':'<span class="main muted">No EPD record</span><span class="sub">'+(p&&p.generic?'Product type only':'Not in the library')+'</span>';
+  const co2=l._kg!=null?'<span class="main mono">'+fmt(l._kg)+' kg</span><span class="sub">A1–A3 · '+fmt(l._gu,2)+'/'+esc(e.cu)+'</span>':'<span class="main muted">—</span><span class="sub">'+(e&&e.gwp==null?'GWP not recorded':'No data')+'</span>';
+  return '<tr data-n="'+l.n+'"'+(st.drawer===l.n?' class="sel"':'')+'>'+
+    '<td data-label="Bid line"><div class="lncell"><button class="lnbtn" data-open="'+l.n+'" aria-label="Open evidence for line '+l.n+'">'+lnum(l.n)+'</button><div class="cell"><span class="main">'+esc(l.desc)+'</span><span class="sub">→ '+prod+'</span><span class="sub">'+(l.code?'<span class="mono">'+esc(l.code)+'</span>':'')+'</span></div></div></td>'+
+    '<td data-label="Qty" class="num"><span><span class="mono">'+fmt(l.qty,l.qty%1?2:0)+'</span> '+esc(l.unit)+'</span></td>'+
+    '<td data-label="Match"><div class="cell">'+matchHTML(l)+'</div></td>'+
+    '<td data-label="EPD"><div class="cell">'+epd+'</div></td>'+
+    '<td data-label="Result"><div class="cell">'+badge(ev.s)+'<span class="sub">'+esc(ev.s==='ready'?'All checks pass':ev.s==='expired'&&e&&e.until?(e.until<TODAY?'Expired ':'Valid to ')+validTxt(e)+(p.listed&&e.until<TODAY?' · still in '+p.listed:''):ev.t)+'</span></div></td>'+
+    '<td data-label="CO₂e" class="num"><div class="cell">'+co2+'</div></td>'+
+    '<td data-label="Next action"><span class="next">'+esc(ev.next)+'</span></td></tr>';
+}
+
+// ---------- drawer ----------
+let lastFocus=null;
+function openDrawer(n){
+  lastFocus=document.activeElement;st.drawer=n;
+  renderDrawer();
+  $('#drawer').hidden=false;$('#backdrop').hidden=false;
+  document.querySelectorAll('#lines tbody tr').forEach(r=>r.classList.toggle('sel',+r.dataset.n===n));
+  const cl=$('#d-close');if(cl)cl.focus();
+}
+function closeDrawer(){
+  if(st.drawer==null)return;
+  const n=st.drawer;st.drawer=null;$('#drawer').hidden=true;$('#backdrop').hidden=true;
+  document.querySelectorAll('#lines tbody tr').forEach(r=>r.classList.remove('sel'));
+  const tgt=document.querySelector('[data-open="'+n+'"]')||lastFocus;if(tgt&&tgt.focus&&document.contains(tgt))tgt.focus();
+}
+function renderDrawer(){
+  const l=st.lines[st.drawer-1];if(!l)return;
+  const p=l.pid?P[l.pid]:null,e=p&&p.epd,ev=l._ev,R=st.R;
+  const dd=(k,v)=>'<dt>'+k+'</dt><dd>'+v+'</dd>';
+  let h='<div class="dhead"><div class="top"><div style="display:grid;gap:4px;min-width:0"><span class="eyebrow">Line '+lnum(l.n)+(l.code?' · <span class="mono">'+esc(l.code)+'</span>':'')+'</span><h2 id="d-title">'+esc(l.desc)+'</h2></div><button class="dclose" id="d-close" aria-label="Close evidence">'+I.close+'</button></div>'+
+    '<div class="row">'+badge(ev.s)+'<span class="small">'+esc(ev.s==='ready'?STATUS.ready.meaning:ev.why)+'</span></div>'+
+    (ev.s!=='ready'?'<p class="small"><b>Next action:</b> '+esc(ev.next)+'</p>':'')+'</div><div class="dbody">';
+  // product match
+  h+='<section class="dsec"><h3>Product match</h3><dl class="ev">'+
+    dd('Bid line',esc(l.desc)+' · <span class="mono">'+fmt(l.qty,l.qty%1?2:0)+'</span> '+esc(l.unit))+
+    dd('Matched product',p?(p.generic?'None named. Recognised as: '+esc(p.name):esc(prodName(p))):'None')+
+    dd('How',!p?'No code match and no description keyword in the EPDesk library':p.generic?'Product type recognised from the keyword "'+esc(l.kw)+'"; the line names no product or code':l.method==='code'?'Exact '+esc(lc(l.kind))+' <span class="mono">'+esc(l.code)+'</span>':l.method==='alternative'?'Alternative chosen by the reviewer, replacing '+esc(P[l.origPid].brand+' '+P[l.origPid].name):'Description keyword "'+esc(l.kw)+'", '+Math.round(l.conf*100)+'% confidence; '+(l.confirmed?'confirmed by the reviewer':'not confirmed'))+
+    '</dl></section>';
+  // EPD record
+  if(e){
+    h+='<section class="dsec"><h3>EPD record</h3><dl class="ev">'+
+      dd('Source',esc(e.op)+' record. <a href="'+esc(p.src)+'" target="_blank" rel="noopener">Open the source ↗</a>'+(p.listed&&e.until&&e.until<TODAY?'<br><span class="small"><b>This expired version is still in '+esc(p.listed)+'.</b></span>':'')+'<br><span class="small muted">Prototype library: copied from the registry in October–November 2026. Check the source for the current version.</span>')+
+      dd('EPD ID','<span class="mono">'+esc(e.id)+'</span>')+
+      dd('Version',esc(epdVersion(e)))+
+      dd('Programme',esc(e.op))+
+      dd('Standard',esc(e.std))+
+      dd('Type',esc(TYPE[e.type]))+
+      dd('Third-party verified',e.ver?'Yes':'No')+
+      dd('Valid until',esc(validTxt(e))+(e.untilNote?'<br><span class="small muted">'+esc(e.untilNote)+'</span>':''))+
+      dd('Declared unit',esc(e.du))+
+      dd('GWP A1–A3',e.gwp!=null?'<span class="mono">'+e.gwp+'</span> kg CO₂e per declared unit':'Not recorded')+
+      '</dl></section>';
+    h+='<section class="dsec"><h3>Quantity and CO₂e</h3><dl class="ev">'+
+      dd('Unit conversion',e.conv===1?'None needed (1 '+esc(e.cu)+' = 1 declared unit)':'<span class="mono">'+e.conv+'</span> per '+esc(e.cu)+' · '+esc(e.convNote)+(e.convAssumed?(l.convOk?' · confirmed by the reviewer':' · <b>assumed</b>'):''))+
+      dd('Per bid unit',l._gu!=null?'<span class="mono">'+fmt(l._gu,3)+'</span> kg CO₂e per '+esc(e.cu):'—')+
+      dd('Line total',l._kg!=null?'<span class="mono">'+fmt(l._kg)+'</span> kg CO₂e, modules A1–A3':'—')+
+      '</dl></section>';
+  }else if(p){
+    h+='<section class="dsec"><h3>EPD record</h3><p class="small">'+(p.generic?'The bid line names a product type, not a product, so there is no EPD to link. '+(p.alt?'A product with a valid EPD is suggested below.':'Ask the supplier which product they will deliver, and for its EPD.'):'No EPD or PEP for this product in the EPDesk library.')+'</p></section>';
+  }
+  // checks
+  if(ev.checks.length){
+    const icon={yes:I.yes,no:I.no,q:I.q,na:I.na};
+    h+='<section class="dsec"><h3>Requirement checks</h3><ul class="checks">'+ev.checks.map(c=>'<li>'+icon[c.state]+'<span><span class="sr" style="position:absolute;left:-9999px">'+({yes:'Passes: ',no:'Fails: ',q:'Open: ',na:''}[c.state])+'</span>'+esc(c.text)+'</span></li>').join('')+'</ul>'+
+      (R.clause?'<details><summary class="small" style="cursor:pointer">Client clause from "'+esc(R.sheet)+'"</summary><blockquote class="clause">'+esc(R.clause)+'</blockquote></details>':(R.defaulted?'<p class="small muted">No clause in the file. Default rules are used.</p>':''))+
+      '</section>';
+  }
+  // assumptions
+  const as=[];
+  as.push('Matched against the EPDesk prototype library, copied from public registries in October–November 2026.');
+  if(e&&e.untilNote)as.push(e.untilNote+'.');
+  if(e&&e.convAssumed&&!l.convOk)as.push('Conversion '+e.convNote+'.');
+  if(R.delAssumed)as.push('Planned delivery '+dmy(R.del)+' is assumed; it was not in the file.');
+  if(R.defaulted)as.push('The client\'s requirements were not in the file; default rules are used.');
+  if(e&&e.gwp==null)as.push('GWP is not recorded, so this line adds nothing to the CO₂e total.');
+  h+='<section class="dsec"><h3>Assumptions</h3><ul class="plain" style="margin:0;padding-left:18px;display:grid;gap:4px;font-size:14px">'+as.map(a=>'<li>'+esc(a)+'</li>').join('')+'</ul></section>';
+  // alternative
+  const a=altOf(l);
+  if(a){const gu=l._gu,ga=gwpUnit(a),d=gu&&ga?Math.round((ga/gu-1)*100):null;
+    h+='<section class="dsec"><h3>'+(p.altLabel?'Renewed PEP available':p.generic?'Suggested product':'Suggested alternative')+'</h3><div class="altcard"><span><b>'+esc(a.brand)+'</b> '+esc(a.name)+' '+originChip(a)+'</span><span class="small"><span class="mono">'+esc(a.epd.id)+'</span> · '+esc(TYPE[a.epd.type])+' · valid to '+esc(validTxt(a.epd))+'</span>'+(d!=null?'<span class="small muted">'+(d<=0?d:'+'+d)+'% GWP per '+esc(a.epd.cu)+' compared with the current product</span>':'')+
+      '<span class="small muted">'+(p.altLabel?'Same product with a renewed PEP. Using it changes only the EPD in the pack.':p.generic?'A product with a valid, product-specific EPD that fits the line. Using it names this product in your bid.':'Alternatives are ranked only on EPD validity and GWP. Using one changes the product in your bid.')+'</span></div></section>';}
+  // supplier request
+  if(needsReq(l)&&p){
+    h+='<section class="dsec"><h3>Supplier request</h3>'+(l.reqOpen?'<p class="small">To: <b>'+esc(p.generic?'your supplier or wholesaler':p.brand)+'</b> (add your contact)</p><pre class="letter" id="req-text">'+esc(reqText(l))+'</pre><div class="row"><button class="btn sm" data-act="copy-req">Copy request</button><span class="small muted">The request is also in the report.</span></div>':'<p class="small muted">A draft request to '+esc(p.generic?'your supplier':p.brand)+' is ready and goes in the report.</p><div class="row"><button class="btn secondary sm" data-act="show-req">Show the draft</button></div>')+'</section>';
+  }
+  h+='</div>';
+  // actions
+  const acts=[];
+  if(ev.s==='review'){
+    (ev.open||[]).forEach(o=>{
+      if(o[0]==='Match not confirmed')acts.push('<button class="btn" data-act="confirm-match">Confirm this product</button>');
+      if(o[0]==='Conversion assumed')acts.push('<button class="btn secondary" data-act="confirm-conv">Confirm the conversion</button>');
+      if(o[0]==='Validity not confirmed')acts.push('<button class="btn secondary" data-act="check-valid">Validity checked at source</button>');
+    });
+  }
+  if(a)acts.push('<button class="btn'+(ev.s==='review'?' secondary':'')+'" data-act="use-alt">'+esc(p.altLabel||(p.generic?'Use the suggested product':'Use the alternative'))+'</button>');
+  if(ev.s==='review')acts.push('<button class="btn quiet" data-act="exclude">Leave out and request</button>');
+  if(l.excluded)acts.push('<button class="btn secondary" data-act="include">Put back for review</button>');
+  if(l.pid!==l.origPid)acts.push('<button class="btn quiet" data-act="undo-alt">Undo the change</button>');
+  if(l.method==='description'&&l.confirmed)acts.push('<button class="btn quiet" data-act="unconfirm">Undo confirmation</button>');
+  acts.push('<span style="flex:1"></span><button class="btn quiet" data-act="next-line">Next line to review →</button>');
+  h+='<div class="dfoot">'+acts.join('')+'</div>';
+  $('#drawer').innerHTML=h;
+}
+function needBy(){
+  const due=parseDate(st.meta.due);
+  if(!due)return 'as soon as possible';
+  const nb=addDays(due,-2);
+  return nb>TODAY?dmy(nb)+' (our bid is due '+dmy(due)+')':'as soon as possible (our bid is due '+dmy(due)+')';
+}
+function reqText(l){
+  const p=l.pid?P[l.pid]:null,e=p&&p.epd,ev=l._ev,m=st.meta,R=st.R;
+  const prod=p&&!p.generic?p.brand+' '+p.name:l.desc;
+  let ask;
+  if(p&&p.generic)ask='Could you propose a product for this line that has a third-party verified EPD to '+R.std+(R.pep?' (PEP ecopassport is also accepted)':'')+', and send us the EPD?';
+  else if(ev.t==='Expired')ask='Could you send us the renewed EPD? The version we have'+(e?' ('+e.id+')':'')+' expired '+(e?validTxt(e):'')+'.';
+  else if(ev.t==='Expires before delivery')ask='Could you send us the renewed EPD, or the date it will be renewed? EPD '+(e?e.id:'')+' is valid until '+(e?validTxt(e):'')+' and our delivery is '+dmy(R.del)+'.';
+  else if(ev.t==='Format not accepted')ask='Could you send us an EPD to '+R.std+'? The client does not accept PEP ecopassport for this bid.';
+  else if(ev.t==='Excluded by reviewer'&&e&&e.type==='industry')ask='Could you send us a product-specific EPD? We only have an industry-average EPD ('+e.id+').';
+  else if(ev.t==='Excluded by reviewer'&&e&&!e.until)ask='Could you confirm that EPD '+e.id+' is still valid on '+dmy(R.del)+', or send us the current version?';
+  else if(ev.t==='No product match')ask='Could you help us identify this product and send its EPD?';
+  else ask='Could you send us an EPD for this product?';
+  return 'Subject: EPD request: '+prod+(m.quote?' ('+m.quote+')':'')+'\n\nHello'+(p&&!p.generic?' '+p.brand+' team':'')+',\n\n'+
+    'We are pricing '+(m.project||'a project')+(m.client?' for '+m.client:'')+(m.quote?' (our quote '+m.quote+')':'')+'. The client requires '+(R.spec?'product-specific, ':'')+(R.ver?'third-party verified ':'')+'EPDs to '+R.std+', valid at delivery on '+dmy(R.del)+'.\n\n'+
+    ask+'\n\n  Product: '+prod+'\n  Code in our bid: '+(l.code||'none')+'\n  Description in our bid: '+l.desc+'\n  Quantity: '+fmt(l.qty,l.qty%1?2:0)+' '+l.unit+'\n\n'+
+    'We need it by '+needBy()+'. The PDF and the registration number are enough.\n\nKind regards,\n[Your name]\n[Company]';
+}
+function nextReview(after){
+  const ls=st.lines.filter(x=>x._ev.s==='review');
+  if(!ls.length)return null;
+  return (ls.find(x=>x.n>after)||ls[0]).n;
+}
+function lineAction(act){
+  const l=st.lines[st.drawer-1];if(!l)return;
+  const p=l.pid?P[l.pid]:null;
+  const before=l._ev.s;
+  if(act==='confirm-match'){l.confirmed=true;}
+  else if(act==='unconfirm'){l.confirmed=false;}
+  else if(act==='confirm-conv'){l.convOk=true;}
+  else if(act==='check-valid'){l.validityChecked=true;}
+  else if(act==='use-alt'&&p&&p.alt){l.pid=p.alt;l.method='alternative';l.confirmed=true;l.reqOpen=false;}
+  else if(act==='undo-alt'){l.pid=l.origPid;l.method=l.origMethod;l.confirmed=false;}
+  else if(act==='exclude'){l.excluded='Left out by the reviewer: '+l._ev.t.toLowerCase()+'. A supplier request goes in the report.';}
+  else if(act==='include'){l.excluded=null;}
+  else if(act==='show-req'){l.reqOpen=true;renderDrawer();return;}
+  else if(act==='copy-req'){copyText(reqText(l),'Request',$('#req-text'));return;}
+  else if(act==='next-line'){const n=nextReview(l.n);if(n){st.drawer=n;renderDrawer();document.querySelectorAll('#lines tbody tr').forEach(r=>r.classList.toggle('sel',+r.dataset.n===n));$('#d-close').focus();}else toast('No lines need review');return;}
+  changed();
+  compute();renderReview();
+  if(l._ev.s!==before)toast(lnum(l.n)+' is now '+STATUS[l._ev.s].label);
+  renderDrawer();
+  const r=document.querySelector('#lines tbody tr[data-n="'+l.n+'"]');if(r){r.classList.add('sel');}
+}
+
+// ---------- pack ----------
+function packLists(){
+  const ready=st.lines.filter(l=>l._ev.s==='ready'),review=st.lines.filter(l=>l._ev.s==='review'),gaps=st.lines.filter(l=>needsReq(l));
+  const byEpd=ls=>{const m=new Map();ls.forEach(l=>{const p=P[l.pid];if(!p||!p.epd)return;if(!m.has(p.epd.id))m.set(p.epd.id,{p,lines:[]});m.get(p.epd.id).lines.push(l);});return [...m.values()];};
+  return {ready,review,gaps,epdReady:byEpd(ready),epdReview:byEpd(review)};
+}
+function fname(s){return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/ø/g,'o').replace(/Ø/g,'O').replace(/æ/g,'ae').replace(/Æ/g,'AE').replace(/å/g,'a').replace(/Å/g,'A').replace(/[^A-Za-z0-9 ._()-]+/g,'-').replace(/-+/g,'-').replace(/\s+/g,' ').trim().slice(0,140);}
+const quoteRef=()=>st.meta.quote||st.file.name.replace(/\.[^.]+$/,'');
+const packName=()=>fname('EPD pack - '+quoteRef()+' - '+(st.signoff?'reviewed':'draft'))+'.zip';
+const reportName=()=>fname('EPD coverage report - '+quoteRef()+' - '+(st.signoff?'reviewed':'draft'))+'.pdf';
+function epdFile(p,ls){return fname(lnum(ls[0].n)+' '+p.brand+' '+p.epd.id+' (EPD summary)')+'.pdf';}
+function renderPack(){
+  compute();
+  const L=packLists(),c=st.stats.c,so=st.signoff;
+  $('#pk-banner').innerHTML=so?
+    '<div class="banner approved">'+I.shield+'<div class="txt"><b>Reviewer-approved pack</b><span>Signed off by '+esc(so.name)+' on '+dmy(so.date)+'.</span></div></div>':
+    '<div class="banner draft">'+I.draft+'<div class="txt"><b>Draft pack, not reviewed</b><span>'+(c.review?c.review+' line'+(c.review>1?'s':'')+' still need review. A draft can be downloaded to share internally.':'All lines are resolved. A reviewer can now sign off.')+'</span></div></div>';
+  const fl=(items)=>'<ul class="files">'+items.join('')+'</ul>';
+  const li=(t,sub)=>'<li>'+I.doc+'<span title="'+esc(t)+'">'+esc(t)+'</span></li>';
+  const epdItems=L.epdReady.map(x=>li(epdFile(x.p,x.lines)));
+  if(!so&&L.epdReview.length){epdItems.push('<li class="sub">Not yet reviewed/</li>');L.epdReview.forEach(x=>epdItems.push(li(epdFile(x.p,x.lines))));}
+  $('#pk-folders').innerHTML=
+    '<div class="folder"><div class="fh">'+I.folder+'<div><h3>1 EPDs</h3><span class="small muted">'+(L.epdReady.length+(so?0:L.epdReview.length))+' EPD summary sheets, named by bid line</span></div></div>'+(epdItems.length?fl(epdItems):'<p class="small muted">No EPDs yet.</p>')+'<p class="small muted">Each sheet lists the EPD\'s key data and links to the official document.</p></div>'+
+    '<div class="folder"><div class="fh">'+I.folder+'<div><h3>2 Bid</h3><span class="small muted">Your file, returned unchanged</span></div></div>'+fl([li(st.file.name)])+'</div>'+
+    '<div class="folder"><div class="fh">'+I.folder+'<div><h3>3 Report</h3><span class="small muted">PDF, in English</span></div></div>'+fl([li(reportName())])+
+      '<ul class="plain small" style="margin:0;padding-left:18px;display:grid;gap:3px"><li>Summary: '+c.ready+' ready, '+c.review+' need review, '+c.missing+' missing, '+c.expired+' expired</li><li>Every line with its EPD, status and CO₂e</li><li>Gaps with alternatives and '+L.gaps.length+' supplier request'+(L.gaps.length===1?'':'s')+'</li><li>Assumptions, and the sign-off record</li></ul></div>'+
+    (L.gaps.length?'<p class="small muted" style="grid-column:1/-1">Not in the pack: '+L.gaps.map(l=>lnum(l.n)).join(', ')+'. They are listed in the report as gaps, each with a supplier request.</p>':'');
+  // sign-off
+  if(so){
+    $('#pk-signoff').innerHTML='<h2>Reviewer sign-off</h2><p class="signed">'+I.ready+'Signed off by '+esc(so.name)+' on '+dmy(so.date)+'</p><p class="small muted">Any change to a line or a rule removes the sign-off.</p><div class="row"><button class="btn secondary sm" data-act="undo-signoff">Remove sign-off</button></div>';
+  }else if(c.review){
+    $('#pk-signoff').innerHTML='<h2>Reviewer sign-off</h2><div class="notice warn">'+I.review+'<div><b>'+c.review+' line'+(c.review>1?'s':'')+' need review first.</b> A reviewer must confirm, replace or leave out each one before signing off.</div></div><div class="row"><button class="btn secondary" data-act="goto-review">Go to lines that need review</button></div>';
+  }else{
+    $('#pk-signoff').innerHTML='<h2>Reviewer sign-off</h2><p class="small">The reviewer confirms that every Ready line was checked and that each gap is documented.</p>'+
+      '<div class="field"><label for="so-name">Reviewer name</label><input id="so-name" type="text" autocomplete="name" placeholder="Full name"></div>'+
+      '<div class="rule"><input type="checkbox" id="so-check"><label for="so-check">I have checked every line marked Ready, and the gaps are documented.</label></div>'+
+      '<div class="row"><button class="btn" data-act="signoff" id="so-btn">Sign off</button></div>'+
+      '<p class="small muted">In the pilot, sign-off is tied to the reviewer\'s own login. Here the name is recorded as typed.</p>';
+  }
+  $('#pk-download').innerHTML='<h2>Download</h2><p class="small">'+(so?'The reviewed pack.':'The draft pack. Lines that still need review sit in a separate folder.')+'</p>'+
+    '<div class="row"><button class="btn" id="dl-zip">Download '+(so?'reviewed':'draft')+' pack (.zip)</button><button class="btn secondary" id="dl-report">Report only (PDF)</button></div>'+
+    '<p class="small muted" id="dl-note"></p>';
+  updateDlNote();
+}
+
+// ---------- PDF ----------
+const C={fg:[36,51,47],muted:[74,87,82],accent:[33,107,94],line:[200,209,202],soft:[231,240,234],s2:[238,241,236],ok:[43,107,71],warn:[133,88,26],warnSoft:[255,242,216],bad:[167,70,64],badSoft:[252,232,229],exp:[140,74,47]};
+const SCOL={ready:C.ok,review:C.warn,missing:C.bad,expired:C.exp};
+const PMAP={'₂':'2','²':'2','→':'->','≥':'>=','≤':'<=','↗':'',' ':' ',' ':' ',' ':' ','×':'x','−':'-'};
+function T(s){return String(s==null?'':s).replace(/[₂²→≥≤↗   ×−]/g,c=>PMAP[c]).replace(/[^\x00-\xFF–—‘’“”•…]/g,'');}
+function newDoc(){const {jsPDF}=window.jspdf;return new jsPDF({unit:'mm',format:'a4'});}
+function runningFrame(doc,title,left,right){
+  const n=doc.internal.getNumberOfPages(),W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
+  for(let i=1;i<=n;i++){doc.setPage(i);
+    if(i>1){doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(...C.fg);doc.text(T(title),16,11);
+      if(right){doc.setTextColor(...C.warn);doc.text(T(right),W-16,11,{align:'right'});}
+      doc.setDrawColor(...C.line);doc.setLineWidth(.2);doc.line(16,13.5,W-16,13.5);}
+    doc.setDrawColor(...C.line);doc.setLineWidth(.2);doc.line(16,H-13,W-16,H-13);
+    doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(...C.muted);
+    doc.text(T(left),16,H-8);doc.text('Page '+i+' of '+n,W-16,H-8,{align:'right'});}
+}
+const TBL={styles:{font:'helvetica',fontSize:8.6,cellPadding:{top:1.8,bottom:1.8,left:2,right:2},textColor:C.fg,lineColor:C.line,lineWidth:0.15,valign:'top',overflow:'linebreak'},headStyles:{fillColor:C.accent,textColor:255,fontStyle:'bold',fontSize:8.6},alternateRowStyles:{fillColor:[248,249,246]},showHead:'everyPage',rowPageBreak:'avoid',margin:{left:16,right:16,top:20,bottom:18}};
+function buildReport(){
+  compute();
+  const doc=newDoc(),W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=16,CW=W-2*M;
+  const m=st.meta,R=st.R,c=st.stats.c,cov=st.stats.cov,so=st.signoff,L=packLists();
+  const title='EPD coverage report · '+(m.project||st.file.name)+(m.quote?' · '+m.quote:'');
+  // header band
+  doc.setFillColor(...C.accent);doc.rect(0,0,W,32,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(19);doc.text('EPD coverage report',M,14);
+  doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.text(T((m.project||st.file.name)+(m.quote?'  ·  Quote '+m.quote:'')),M,23,{maxWidth:CW-60});
+  doc.setFont('helvetica','bold');doc.setFontSize(12);doc.text('EPDesk',W-M,14,{align:'right'});
+  doc.setFontSize(9.5);doc.text(so?'REVIEWED':'DRAFT - NOT REVIEWED',W-M,23,{align:'right'});
+  let y=40;
+  // headline
+  const found=st.lines.filter(l=>{const p=l.pid?P[l.pid]:null;return p&&p.epd;}).length;
+  doc.setTextColor(...C.fg);doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text(T('EPDs found for '+found+' of '+st.lines.length+' lines'),M,y+2);
+  doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(...C.muted);
+  doc.text(T([c.expired?c.expired+' expired EPD'+(c.expired>1?'s':'')+' caught':'',c.missing?c.missing+' gap'+(c.missing>1?'s':'')+' with a next step':'',c.ready+' line'+(c.ready===1?'':'s')+' ready'].filter(Boolean).join('  ·  ')),M,y+8);
+  y+=17;
+  // facts
+  const facts=[['Client',m.client||'Not given'],['Bid due',m.due&&parseDate(m.due)?dmy(parseDate(m.due)):'Not given'],['Bid file',st.file.name],['Planned delivery',dmy(R.del)+(R.delAssumed?' (assumed)':'')],['Checked',dmy(TODAY)],['Requirements',R.defaulted?'Default rules (none in the file)':'From "'+R.sheet+'"']];
+  doc.setFontSize(9.5);
+  facts.forEach(([k,v],i)=>{const x=i%2?M+CW/2:M,yy=y+Math.floor(i/2)*6.2;doc.setTextColor(...C.muted);doc.setFont('helvetica','normal');doc.text(k,x,yy);doc.setTextColor(...C.fg);doc.setFont('helvetica','bold');const fl=doc.splitTextToSize(T(v),CW/2-32);doc.text(fl.length>1?fl[0].replace(/\s*\S*$/,'')+'…':fl[0],x+30,yy);});
+  y+=3*6.2+4;
+  // summary boxes
+  const boxes=[['Ready',String(c.ready),C.ok],['Needs review',String(c.review),C.warn],['Missing',String(c.missing),C.bad],['Expired',String(c.expired),C.exp],['CO2e A1-A3',fmt(cov.kg/1000,1)+' t',C.accent]];
+  const bw=(CW-4*3)/5;
+  boxes.forEach(([k,v,col],i)=>{const x=M+i*(bw+3);doc.setFillColor(...C.s2);doc.roundedRect(x,y,bw,20,1.5,1.5,'F');doc.setFillColor(...col);doc.rect(x,y,bw,1.4,'F');
+    doc.setFont('helvetica','normal');doc.setFontSize(8.6);doc.setTextColor(...C.fg);doc.text(T(k),x+3,y+7);
+    doc.setFont('helvetica','bold');doc.setFontSize(15);doc.setTextColor(...col);doc.text(T(v),x+3,y+15.5);});
+  y+=24;
+  doc.setFont('helvetica','normal');doc.setFontSize(8.6);doc.setTextColor(...C.muted);
+  doc.text(T('CO2e covers '+cov.n+' of '+st.lines.length+' lines ('+Math.round(cov.n/(st.lines.length||1)*100)+'%) with EPD data that is not expired: Ready and Needs-review lines only.'),M,y,{maxWidth:CW});
+  y+=8;
+  // requirements
+  doc.setFont('helvetica','bold');doc.setFontSize(11.5);doc.setTextColor(...C.fg);doc.text('Requirements applied',M,y);y+=5.5;
+  doc.setFont('helvetica','normal');doc.setFontSize(9.5);
+  const rl=['Standard: '+R.std+(R.ver?', third-party verified':''),'PEP ecopassport / EN 50693: '+(R.pep?'accepted':'not accepted'),'Product-specific EPD: '+(R.spec?'required (industry average only with approval)':'not required'),'Valid at delivery: '+dmy(R.del),'Total GWP A1-A3 for the delivery: '+(R.gwp?'required':'not required')];
+  if(['pep','spec','del','ver','gwp'].some(k=>st.R[k]!==st.R0[k]))rl.push('Note: rules were changed in EPDesk and differ from the file.');
+  rl.forEach(t=>{doc.text('•  '+T(t),M+1,y);y+=5;});
+  y+=2;
+  // sign-off status
+  doc.setFont('helvetica','bold');doc.setFontSize(11.5);doc.text('Sign-off',M,y);y+=5.5;
+  doc.setFont('helvetica','normal');doc.setFontSize(9.5);
+  doc.text(T(so?'Signed off by '+so.name+' on '+dmy(so.date)+'.':'Not signed off. This is a draft; '+c.review+' line(s) still need review.'),M,y,{maxWidth:CW});
+  const section=(t,col,need)=>{let yy=doc.lastAutoTable&&doc.lastAutoTable.finalY?doc.lastAutoTable.finalY+10:y+10;if(yy>H-18-(need||40)){doc.addPage();yy=22;}doc.setFont('helvetica','bold');doc.setFontSize(12.5);doc.setTextColor(...(col||C.fg));doc.text(T(t),M,yy);return yy+2.5;};
+  // 1 all lines
+  doc.addPage();
+  doc.setFont('helvetica','bold');doc.setFontSize(12.5);doc.setTextColor(...C.fg);doc.text('1. All lines',M,22);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...C.muted);doc.text('Exceptions first. Ready means an exact or reviewer-confirmed match where every requirement passes.',M,27.5,{maxWidth:CW});
+  const all=st.lines.slice().sort((a,b)=>ORDER[a._ev.s]-ORDER[b._ev.s]||a.n-b.n);
+  doc.autoTable(Object.assign({},TBL,{startY:31,
+    head:[['Line','Bid line and product','Match','EPD','Status','kg CO2e']],
+    body:all.map(l=>{const p=l.pid?P[l.pid]:null,e=p&&p.epd;
+      return [lnum(l.n),T(l.desc+' · '+fmt(l.qty,l.qty%1?2:0)+' '+l.unit+'\n'+prodName(p)),
+        T(!p?'None':l.method==='code'?'Exact '+l.kind:l.method==='alternative'?'Alternative (reviewer)':'Description '+Math.round(l.conf*100)+'%'+(l.confirmed?', confirmed':', not confirmed')),
+        T(e?e.id+'\n'+TYPE[e.type]+' · '+opLabel(p)+'\n'+validLabel(e):'No EPD record'),
+        T(STATUS[l._ev.s].label+(l._ev.s==='ready'||l._ev.t===STATUS[l._ev.s].label?'':': '+l._ev.t)),
+        l._kg!=null?fmt(l._kg):'-'];}),
+    foot:[['','Total A1-A3, Ready and Needs-review lines with data','','','',fmt(cov.kg)]],
+    footStyles:{fillColor:C.soft,textColor:C.fg,fontStyle:'bold',fontSize:8.6},
+    columnStyles:{0:{cellWidth:11,fontStyle:'bold'},1:{cellWidth:56},2:{cellWidth:28},3:{cellWidth:40},4:{cellWidth:28},5:{cellWidth:'auto',halign:'right'}},
+    didParseCell:d=>{if(d.section==='body'&&d.column.index===4){const s=all[d.row.index]._ev.s;d.cell.styles.textColor=SCOL[s];d.cell.styles.fontStyle='bold';}}}));
+  // 2 needs review
+  if(L.review.length){
+    const sy=section('2. Needs review',C.warn,40);
+    doc.autoTable(Object.assign({},TBL,{startY:sy+2,head:[['Line','Bid line','Open checks','Next action']],
+      body:L.review.map(l=>[lnum(l.n),T(l.desc),T((l._ev.open||[]).map(o=>o[0]+': '+o[1]).join('\n')),T(l._ev.next)]),
+      headStyles:Object.assign({},TBL.headStyles,{fillColor:C.warn}),
+      columnStyles:{0:{cellWidth:11,fontStyle:'bold'},1:{cellWidth:46},2:{cellWidth:80},3:{cellWidth:'auto'}}}));
+  }
+  // 3 gaps
+  const gn=L.review.length?3:2;
+  const gy=section(gn+'. Gaps: missing and expired',C.bad,40);
+  doc.autoTable(Object.assign({},TBL,{startY:gy+2,head:[['Line','Bid line','Matched product','Why','Suggested alternative']],
+    body:L.gaps.length?L.gaps.map(l=>{const p=l.pid?P[l.pid]:null,a=p&&p.alt&&l.pid===l.origPid?P[p.alt]:null;
+      return [lnum(l.n),T(l.desc+'\n'+(l.code?l.code+' · ':'')+fmt(l.qty,l.qty%1?2:0)+' '+l.unit),T(p?(p.generic?'None named ('+p.name+')':p.brand+' '+p.name):'No product match'),T((l._ev.t===STATUS[l._ev.s].label?l._ev.t:STATUS[l._ev.s].label+': '+l._ev.t)+'. '+l._ev.why),T(a?a.brand+' '+a.name+'\n'+a.epd.id+', valid to '+validTxt(a.epd):'None found yet')];}):[['','No gaps','','','']],
+    headStyles:Object.assign({},TBL.headStyles,{fillColor:C.bad}),
+    columnStyles:{0:{cellWidth:11,fontStyle:'bold'},1:{cellWidth:40},2:{cellWidth:36},3:{cellWidth:52},4:{cellWidth:'auto'}}}));
+  // 4 supplier requests
+  let sn=gn+1;
+  if(L.gaps.length){
+    doc.addPage();y=22;
+    doc.setFont('helvetica','bold');doc.setFontSize(12.5);doc.setTextColor(...C.fg);doc.text(sn+'. Supplier requests (drafts)',M,y);y+=6;
+    doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...C.muted);
+    doc.text(T(L.gaps.length+' drafts, one per gap. Add the contact, check the wording, then send.'),M,y);y+=7;
+    L.gaps.forEach(l=>{const p=l.pid?P[l.pid]:null;
+      doc.setFontSize(9.2);const lines=doc.splitTextToSize(T(reqText(l)),CW-10);const h=lines.length*4.1+13;
+      if(y+h>H-18){doc.addPage();y=22;}
+      doc.setFillColor(...C.s2);doc.setDrawColor(...C.line);doc.setLineWidth(.2);doc.roundedRect(M,y,CW,h,1.5,1.5,'FD');
+      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(...C.fg);doc.text(T(lnum(l.n)+'  ·  To: '+(p&&!p.generic?p.brand:'supplier')+'  ·  '+l._ev.t),M+5,y+6.5);
+      doc.setFont('helvetica','normal');doc.setFontSize(9.2);doc.text(lines,M+5,y+12.5,{lineHeightFactor:1.3});
+      y+=h+5;});
+    sn++;
+  }
+  // assumptions
+  if(!L.gaps.length){y=doc.lastAutoTable.finalY+12;}
+  if(y>H-60){doc.addPage();y=22;}
+  doc.setFont('helvetica','bold');doc.setFontSize(12.5);doc.setTextColor(...C.fg);doc.text(sn+'. Assumptions and limits',M,y);y+=6.5;
+  doc.setFont('helvetica','normal');doc.setFontSize(9.5);
+  const as=['EPD data comes from the EPDesk prototype library, copied by hand from public registries (EPD-Norge, PEP ecopassport, International EPD System, EFObasen, NOBB) in October-November 2026. Check each source link before submission.','The EPD folder holds one summary sheet per EPD, each with a link to the official document.','CO2e uses GWP A1-A3 per declared unit times the conversion to the bid unit. Lines without data or with an expired EPD are left out of the total.'];
+  st.lines.forEach(l=>{const e=l.pid&&P[l.pid].epd;if(e&&e.convAssumed&&!l.convOk&&l._ev.s!=='missing')as.push(lnum(l.n)+': conversion '+e.convNote+'.');});
+  if(R.delAssumed)as.push('Planned delivery '+dmy(R.del)+' is assumed; it was not in the file.');
+  as.forEach(t=>{const ls=doc.splitTextToSize('•  '+T(t),CW-2);if(y+ls.length*4.6>H-18){doc.addPage();y=22;}doc.text(ls,M+1,y);y+=ls.length*4.6+1.2;});
+  runningFrame(doc,title,'EPDesk report · '+(so?'reviewed':'draft')+' · generated '+dmy(TODAY),so?'':'DRAFT - NOT REVIEWED');
+  return doc;
+}
+function epdPdf(p,lines,unreviewed){
+  const doc=newDoc(),W=doc.internal.pageSize.getWidth(),M=18,e=p.epd;
+  doc.setFillColor(...C.s2);doc.rect(0,0,W,36,'F');
+  doc.setTextColor(...C.muted);doc.setFont('helvetica','bold');doc.setFontSize(9);doc.text('EPD SUMMARY SHEET',M,13);
+  doc.setTextColor(...C.fg);doc.setFontSize(17);doc.text(T(p.brand),M,22);
+  doc.setFont('helvetica','normal');doc.setFontSize(11.5);doc.text(T(p.name),M,29.5,{maxWidth:W-2*M});
+  let y=46;
+  doc.setFillColor(...C.soft);doc.setDrawColor(...C.accent);doc.setLineWidth(.3);doc.roundedRect(M,y-6,W-2*M,17,1.5,1.5,'FD');
+  doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(...C.accent);doc.text('Summary prepared by EPDesk',M+4,y);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...C.fg);
+  doc.text(T('The official '+e.op+' document is at the source link below. Key data was copied from the registry in October-November 2026.'),M+4,y+5.5,{maxWidth:W-2*M-8});
+  y+=21;
+  if(unreviewed){doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(...C.warn);doc.text('Not yet reviewed: this line still needs a reviewer decision.',M,y);y+=7;}
+  const rows=[['Manufacturer',p.brand],['Product',p.name],['EPD registration no.',e.id],['Version',epdVersion(e)],['Programme operator',e.op],['Standard',e.std],['EPD type',TYPE[e.type]],['Third-party verified',e.ver?'Yes':'No'],['Valid until',validTxt(e)],['Declared unit',e.du],['GWP A1-A3 per declared unit',e.gwp!=null?String(e.gwp)+' kg CO2e':'Not recorded'],['Conversion to bid unit',e.conv===1?'None needed':e.conv+' per '+e.cu+(e.convNote?' ('+e.convNote+')':'')],['Used in bid lines',lines.map(l=>lnum(l.n)+' '+l.desc).join('\n')],['Bid',(st.meta.quote?st.meta.quote+', ':'')+st.file.name],['Source',p.src]];
+  doc.autoTable({startY:y,margin:{left:M,right:M,bottom:18},body:rows.map(r=>[T(r[0]),T(r[1])]),theme:'plain',
+    styles:{font:'helvetica',fontSize:9.5,cellPadding:{top:2.2,bottom:2.2,left:0,right:2},textColor:C.fg,lineColor:C.line,lineWidth:{bottom:0.15},overflow:'linebreak'},
+    columnStyles:{0:{cellWidth:58,textColor:C.muted},1:{fontStyle:'bold'}},rowPageBreak:'avoid'});
+  runningFrame(doc,'EPD summary · '+p.brand,'EPD summary sheet · EPDesk · the official document is at the source link');
+  return doc;
+}
+async function buildZip(){
+  const zip=new JSZip(),L=packLists(),so=st.signoff;
+  for(const x of L.epdReady){zip.file('1 EPDs/'+epdFile(x.p,x.lines),epdPdf(x.p,x.lines,false).output('arraybuffer'));await sleep(0);}
+  if(!so)for(const x of L.epdReview){zip.file('1 EPDs/Not yet reviewed/'+epdFile(x.p,x.lines),epdPdf(x.p,x.lines,true).output('arraybuffer'));await sleep(0);}
+  zip.file('2 Bid/'+st.file.name,st.file.bytes);
+  zip.file('3 Report/'+reportName(),buildReport().output('arraybuffer'));
+  zip.file('READ ME.txt','EPDesk EPD pack\r\n\r\nStatus: '+(so?'reviewed by '+so.name+' on '+dmy(so.date):'draft, not reviewed')+'\r\n\r\n1 EPDs   one summary sheet per EPD, named by bid line, with a link to the official document'+(so?'':'; lines not yet reviewed are in a subfolder')+'\r\n2 Bid    your bid file, returned unchanged\r\n3 Report EPD coverage report: statuses, CO2e, gaps, supplier requests, assumptions\r\n\r\nPrototype: EPD data was copied from public registries in October-November 2026. Check each source link before submission.\r\n');
+  return zip.generateAsync({type:'blob',compression:'DEFLATE'});
+}
+
+// ---------- downloads ----------
+let DL=null,dlChecked=false;
+const TOPLEVEL=(()=>{try{return window.self===window.top;}catch(e){return false;}})();
+(async()=>{try{if(window.claude&&typeof window.claude.use==='function')DL=await window.claude.use('downloads');}catch(e){DL=null;}dlChecked=true;$('#dl-sample').hidden=!(DL||TOPLEVEL);updateDlNote();})();
+function libsOk(){return typeof JSZip!=='undefined'&&window.jspdf&&window.jspdf.jsPDF&&typeof window.jspdf.jsPDF.API.autoTable==='function';}
+function updateDlNote(){
+  const z=$('#dl-zip'),r=$('#dl-report'),n=$('#dl-note');if(!z)return;
+  const can=!!DL||TOPLEVEL,ok=libsOk()&&can;z.disabled=!ok;r.disabled=!ok;
+  n.textContent=!dlChecked?'':!can?'Downloads work when this page is open in claude.ai or the Claude app.':!libsOk()?'The PDF and zip tools did not load. Check the connection and reload the page.':'File name: '+packName();
+}
+async function save(btn,filename,make){
+  const old=btn.innerHTML;btn.disabled=true;btn.textContent='Preparing…';
+  try{const data=await make();
+    if(DL){const r=await DL.save({filename,data});toast(r&&r.status==='delivered'?'Sent':'Saved '+filename);}
+    else if(!TOPLEVEL){toast('Downloads work when this page is open in claude.ai or the Claude app');}
+    else{const blob=data instanceof Blob?data:new Blob([data]);const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000);toast('Downloading '+filename);}}
+  catch(e){const c=e&&e.code;
+    if(c==='declined')toast('Download cancelled');
+    else if(c==='rate_limited')toast('A download is already waiting for your answer');
+    else{console.error(e);toast('The file could not be saved here');}}
+  finally{btn.disabled=false;btn.innerHTML=old;}
+}
+async function copyText(text,label,fallbackEl){
+  try{await navigator.clipboard.writeText(text);toast(label+' copied');}
+  catch(e){if(fallbackEl){const r=document.createRange();r.selectNodeContents(fallbackEl);const s=getSelection();s.removeAllRanges();s.addRange(r);}toast('Copy is blocked here. The text is selected; copy it by hand.');}
+}
+
+// ---------- events ----------
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button,[data-open]');
+  const tr=e.target.closest('#lines tbody tr[data-n]');
+  if(!t&&tr){openDrawer(+tr.dataset.n);return;}
+  if(!t)return;
+  if(t.dataset.view){view(t.dataset.view);return;}
+  if(t.dataset.open){openDrawer(+t.dataset.open);return;}
+  if(t.dataset.filter){st.filter=(t.classList.contains('tile')&&st.filter===t.dataset.filter)?'all':t.dataset.filter;document.querySelectorAll('.tile[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===st.filter)));renderLines();return;}
+  if(t.dataset.goto){closeDrawer();if(t.dataset.goto==='pack'){renderPack();screen('pack');}else{renderReview();screen('review');}return;}
+  const act=t.dataset.act;
+  if(t.id==='d-close'){closeDrawer();return;}
+  if(act&&st.drawer!=null&&t.closest('#drawer')){lineAction(act);return;}
+  if(act==='sample'){loadSample();return;}
+  if(act==='retry'){runReading();return;}
+  if(act==='back-preview'){runId++;renderPreview();screen('preview');return;}
+  if(act==='confirm-suggested'){const sg=suggested(),b=st.stats.c.ready;sg.forEach(l=>{l.confirmed=true;});changed();renderReview();toast(sg.length+' matches confirmed · '+(st.stats.c.ready-b)+' more lines ready');return;}
+  if(act==='reset-rules'){st.R=Object.assign({},st.R0,{src:Object.assign({},st.R0.src)});changed();renderReview();return;}
+  if(act==='goto-review'){st.filter='review';renderReview();screen('review');return;}
+  if(act==='undo-signoff'){st.signoff=null;renderPack();return;}
+  if(act==='signoff'){
+    const name=($('#so-name').value||'').trim(),ok=$('#so-check').checked;
+    if(!name){toast('Type the reviewer\'s name');$('#so-name').focus();return;}
+    if(!ok){toast('Tick the confirmation first');$('#so-check').focus();return;}
+    st.signoff={name,date:TODAY};renderPack();toast('Signed off by '+name);return;
+  }
+  if(act==='confirm-new'){runId++;closeDrawer();st.lines=[];st.stats=null;st.signoff=null;resetNewCheck();screen('upload');return;}
+  if(act==='cancel-new'){resetNewCheck();return;}
+});
+function resetNewCheck(){$('#rv-actions').innerHTML='<button class="btn secondary" id="new-check">Check another bid</button><button class="btn" id="to-pack">Continue to pack</button>';}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.id==='new-check'){$('#rv-actions').innerHTML='<span class="small">Start over? This check will be lost.</span><button class="btn secondary sm" data-act="cancel-new">Keep this check</button><button class="btn sm" data-act="confirm-new">Start a new check</button>';}
+  else if(t.id==='to-pack'){closeDrawer();renderPack();screen('pack');}
+  else if(t.id==='back-review'){renderReview();screen('review');}
+  else if(t.id==='start'){startCheck();}
+  else if(t.id==='pv-other'){showError('');screen('upload');}
+  else if(t.id==='rd-cancel'){runId++;renderPreview();screen('preview');toast('Check cancelled. Nothing was saved.');}
+  else if(t.id==='use-sample'){loadSample();}
+  else if(t.id==='dl-sample'){save(t,SAMPLE_NAME,async()=>b64bytes(SAMPLE_B64));}
+  else if(t.id==='dl-zip'){save(t,packName(),buildZip);}
+  else if(t.id==='dl-report'){save(t,reportName(),async()=>buildReport().output('blob'));}
+});
+document.addEventListener('change',e=>{
+  const el=e.target;
+  if(el.dataset.map){
+    const k=el.dataset.map,v=el.value===''?null:+el.value;
+    if(k==='sheet'){st.sheetIdx=v;const h=findHeader(st.sheets[v].rows);if(h){st.hr=h.r;st.map=Object.assign({},h.c);}else{st.map={};}}
+    else if(k==='hr'){st.hr=v;const h=findHeader(st.sheets[st.sheetIdx].rows.slice(v,v+1));if(h){st.map=Object.assign({},h.c);}}
+    else{st.map[k]=v;}
+    st.detected=false;renderPreview();
+    const again=document.getElementById(el.id);if(again)again.focus();
+    return;
+  }
+  if(el.dataset.meta){st.meta[el.dataset.meta]=el.value;return;}
+  if(el.dataset.rule){
+    const k=el.dataset.rule;
+    if(k==='del'){if(!el.value)return;st.R.del=el.value;st.R.delAssumed=false;}
+    else st.R[k]=el.checked;
+    if(st.view==='review'){changed();renderReview();const again=document.getElementById(el.id);if(again)again.focus();}
+    else if(st.view==='preview'){renderPreview();const again=document.getElementById(el.id);if(again)again.focus();}
+  }
+});
+document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.meta)st.meta[e.target.dataset.meta]=e.target.value;});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&st.drawer!=null){closeDrawer();return;}
+  if(e.key==='Tab'&&st.drawer!=null){
+    const f=[...$('#drawer').querySelectorAll('button,a[href],input,summary,[tabindex]:not([tabindex="-1"])')].filter(x=>!x.disabled&&x.offsetParent!==null);
+    if(!f.length)return;const first=f[0],last=f[f.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  }
+  if((e.key==='Enter'||e.key===' ')&&e.target.id==='file-label'){e.preventDefault();$('#file').click();}
+});
+$('#backdrop').addEventListener('click',closeDrawer);
+$('#file').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)readFile(f);});
+const drop=$('#drop');
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+['dragleave','dragend'].forEach(ev=>drop.addEventListener(ev,()=>drop.classList.remove('over')));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');const f=e.dataTransfer&&e.dataTransfer.files[0];if(f)readFile(f);});
+document.addEventListener('dragover',e=>{if(st.view==='upload')e.preventDefault();});
+document.addEventListener('drop',e=>{if(st.view==='upload'&&!e.target.closest('#drop')){e.preventDefault();const f=e.dataTransfer&&e.dataTransfer.files[0];if(f)readFile(f);}});
+function loadSample(){openFile(SAMPLE_NAME,b64bytes(SAMPLE_B64),true);}
+function view(v){
+  const how=v==='how';
+  $('#view-check').hidden=how;$('#view-how').hidden=!how;
+  $('#nav-check').toggleAttribute('aria-current',!how);$('#nav-how').toggleAttribute('aria-current',how);
+  if(how)$('#nav-how').setAttribute('aria-current','page');else $('#nav-check').setAttribute('aria-current','page');
+  try{history.replaceState(null,'',how?'#how':'#check');}catch(e){}
+  closeDrawer();window.scrollTo(0,0);
+}
+window.addEventListener('hashchange',()=>view(location.hash==='#how'?'how':'check'));
+screen('upload');
+if(location.hash==='#how')view('how');
+window.__epdesk={st,openFile,loadSample};
+})();
+</script>
+
+</body></html>
