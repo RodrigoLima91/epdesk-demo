@@ -4,7 +4,7 @@ EPD bid check demo: upload a bid, see which lines have a valid EPD, catch expire
 
 Live demo: https://rodrigolima91.github.io/epdesk-demo/
 
-Pilot film (90 seconds, silent, on-screen text): https://rodrigolima91.github.io/epdesk-demo/film/
+Pilot film (90 seconds, voiceover and subtitles): https://rodrigolima91.github.io/epdesk-demo/film/
 
 Prototype. EPD data was copied from public registries (EPD-Norge, PEP ecopassport, International EPD System, EFObasen, NOBB) in October–November 2026. Check each source link before using it in a real bid.
 
