@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>EPDesk Pilot Film</title>
+<meta name="description" content="A 90-second silent film of EPDesk: Sara uploads the list of materials for a bid and gets every EPD back in one file.">
+<meta property="og:type" content="video.other">
+<meta property="og:title" content="EPDesk pilot film">
+<meta property="og:description" content="From bid to EPD pack in minutes. A 90-second silent film with on-screen text.">
+<meta property="og:url" content="https://rodrigolima91.github.io/epdesk-demo/film/">
+<meta property="og:image" content="https://rodrigolima91.github.io/epdesk-demo/film/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+/* Page: a film player. One 16:9 stage drawn at 1280x720 and scaled to fit, controls under it, chapters below.
+   The stage keeps its own light look in both themes. */
+:root{
+  --bg:#f6f6fa; --surface:#ffffff; --surface-2:#eef0f8; --line:#e2e4ef;
+  --fg:#1e2350; --muted:#62668a; --accent:#f2435a; --accent-ink:#ffffff; --accent-soft:#ffe5e9; --navy:#1e2350;
+  --f:"Poppins",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12142a; --surface:#1a1d38; --surface-2:#232747; --line:#2e3358;
+  --fg:#e8e9f6; --muted:#a3a7c7; --accent:#ff6378; --accent-ink:#1a0b10; --accent-soft:#3b1e2a; --navy:#e8e9f6; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#12142a; --surface:#1a1d38; --surface-2:#232747; --line:#2e3358;
+  --fg:#e8e9f6; --muted:#a3a7c7; --accent:#ff6378; --accent-ink:#1a0b10; --accent-soft:#3b1e2a; --navy:#e8e9f6; color-scheme:dark;}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f);font-size:15px;line-height:1.55;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:26px 56px;display:grid;gap:18px}
+.top{display:flex;align-items:center;gap:10px}
+a.logo{text-decoration:none}
+.logo{font-weight:600;font-size:21px;display:flex;align-items:center;gap:9px;color:var(--navy)}
+.logo svg{width:28px;height:28px;flex:none}
+.logo b{color:var(--accent);font-weight:600}
+.eyebrow{display:inline-block;justify-self:start;font-size:12.5px;font-weight:500;color:var(--accent);background:var(--accent-soft);padding:3px 12px;border-radius:999px}
+h1{font-size:30px;font-weight:600;line-height:1.2;margin:0;text-wrap:balance;letter-spacing:-.01em}
+p{margin:0}
+.intro{display:grid;gap:8px;max-width:72ch}
+.intro p{color:var(--muted)}
+.player{margin:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--surface);display:grid;box-shadow:0 20px 60px rgba(30,35,80,.08)}
+.screen{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:#fbfbfd;cursor:pointer;max-width:100%}
+.bigplay{position:absolute;left:50%;top:50%;width:88px;height:88px;margin:-44px 0 0 -44px;border-radius:50%;border:0;background:#f2435a;color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 0 0 12px rgba(242,67,90,.14),0 14px 34px rgba(242,67,90,.35);z-index:3}
+.bigplay svg{width:34px;height:34px;margin-left:4px}
+.controls{display:flex;align-items:center;gap:12px;padding:10px 14px;border-top:1px solid var(--line);background:var(--surface)}
+.cbtn{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--fg);width:38px;height:38px;border-radius:12px;display:grid;place-items:center;cursor:pointer;flex:none}
+.cbtn svg{width:16px;height:16px}
+.cbtn:focus-visible,.bigplay:focus-visible,input:focus-visible,.chap:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.time{font-family:var(--f-mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+input[type=range]{flex:1;min-width:0;accent-color:var(--accent);height:24px}
+.subline{min-height:3em;font-size:16px;color:var(--fg);display:none}
+@media (max-width:640px){.subline{display:block}.controls{gap:8px;padding:8px 10px}.time{font-size:12px}h1{font-size:25px}}
+.chapters{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.chap{font:inherit;font-size:13px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:6px 14px;border-radius:999px;cursor:pointer;display:inline-flex;gap:8px;box-shadow:0 4px 14px rgba(30,35,80,.05)}
+.chap span{font-family:var(--f-mono);color:var(--accent)}
+.chap[aria-current="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.fine{font-size:13px;color:var(--muted);max-width:80ch}
+.fine a{color:var(--accent)}
+.player:fullscreen{border:0;border-radius:0;background:#000;align-content:center}
+.player:fullscreen .screen{width:min(100vw,calc((100vh - 60px) * 16 / 9));margin:0 auto}
+
+/* ================= STAGE (fixed light look) ================= */
+.stage{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0;overflow:hidden;
+  --navy:#1e2350;--ink:#2a2f5e;--muted:#6b6f8a;--line:#e7e8f0;--bg:#fafafd;--lav:#f2f3fb;
+  --blue:#3340a8;--blueS:#e8eafb;--coral:#f2435a;--coralS:#ffe5e9;--ok:#17a05d;--okS:#e2f5ea;--warn:#ef9a12;--warnS:#fef0d8;--peri:#7c87e6;
+  background:#fbfbfd;color:var(--navy);font-family:var(--f);font-size:16px;line-height:1.45}
+.stage *{box-sizing:border-box}
+.stage .blob{position:absolute;border-radius:50%;filter:blur(80px)}
+.stage .b1{width:640px;height:540px;background:rgba(242,67,90,.15);right:-160px;top:-180px}
+.stage .b2{width:620px;height:520px;background:rgba(116,128,232,.17);left:-180px;bottom:-200px}
+.stage .b3{width:420px;height:360px;background:rgba(255,170,182,.16);left:420px;top:200px}
+.stage .layer{position:absolute;visibility:hidden;opacity:0;will-change:opacity,transform}
+.stage .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 60px rgba(30,35,80,.10),0 3px 8px rgba(30,35,80,.04)}
+.stage .mono{font-family:var(--f-mono)}
+.stage .muted{color:var(--muted)}
+.stage .eb{font-size:12.5px;color:var(--muted);font-weight:500}
+.stage .pill{display:inline-flex;align-items:center;justify-content:center;font-weight:500;font-size:12.5px;padding:3px 12px;border-radius:999px;white-space:nowrap;color:#fff}
+.stage .pill.ok{background:var(--ok)} .stage .pill.warn{background:var(--warn)} .stage .pill.bad{background:var(--coral)}
+.stage .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-weight:500;font-size:14px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;border-radius:10px;white-space:nowrap}
+.stage .btn svg{width:16px;height:16px}
+.stage .btn.ghost{background:#fff;color:var(--blue)}
+.stage .mk{display:inline-block;flex:none}
+.stage .mk svg{display:block;width:100%;height:100%}
+.stage .tileic{width:58px;height:58px;border-radius:17px;background:#fff;display:grid;place-items:center;box-shadow:0 14px 34px rgba(116,128,232,.28),0 2px 6px rgba(30,35,80,.06);color:var(--coral)}
+.stage .tileic svg{width:30px;height:30px}
+
+/* avatar */
+.stage .av{position:absolute;border-radius:50%;overflow:hidden;background:#fff;border:6px solid #fff;box-shadow:0 18px 50px rgba(40,50,120,.18)}
+.stage .av svg{display:block;width:100%;height:100%}
+.stage .npill{position:relative;display:inline-flex;align-items:center;gap:6px;background:var(--navy);color:#fff;font-weight:500;font-size:17px;padding:8px 22px;border-radius:999px;box-shadow:0 10px 26px rgba(30,35,80,.25)}
+.stage .npill::before{content:"";position:absolute;left:50%;top:-7px;margin-left:-8px;border:8px solid transparent;border-top:0;border-bottom:8px solid var(--navy)}
+.stage .npill.sm{font-size:14px;padding:5px 16px}
+.stage .npill span{opacity:.75;font-weight:400}
+
+/* intro */
+#intro{left:0;top:0;width:1280px;height:720px}
+#intro .row{position:absolute;left:0;top:270px;width:1280px;display:flex;justify-content:center;align-items:center;gap:20px}
+#imk{width:86px;height:86px}
+#iwm{font-weight:600;font-size:70px;letter-spacing:-.02em;color:var(--navy);line-height:1}
+#iwm b,#ewm b{color:var(--coral);font-weight:600}
+#isw{position:absolute;left:560px;top:362px;width:330px;height:44px;overflow:visible}
+.swp{fill:none;stroke:url(#swg);stroke-width:4;stroke-linecap:round;stroke-dasharray:1 1}
+#itag{position:absolute;left:0;top:420px;width:1280px;text-align:center;font-size:23px;color:var(--muted);margin:0}
+
+/* persona */
+#persona{left:0;top:0;width:1280px;height:720px}
+.halo{position:absolute;border-radius:50%;background:rgba(255,255,255,.5);border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(116,128,232,.16),0 24px 60px rgba(242,67,90,.07),inset 0 0 50px rgba(242,67,90,.07)}
+#h1{left:470px;top:220px;width:340px;height:340px}
+#h2{left:415px;top:165px;width:450px;height:450px}
+#h3{left:355px;top:105px;width:570px;height:570px}
+#pglow{position:absolute;left:440px;top:190px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(242,67,90,.26),rgba(242,67,90,0) 66%)}
+#pav{left:510px;top:260px;width:260px;height:260px}
+#pname{position:absolute;left:0;top:503px;width:1280px;text-align:center}
+
+/* narration */
+.narr{left:120px;width:1040px;text-align:center}
+.narr .tx{display:inline;font-weight:600;font-size:48px;line-height:1.2;color:var(--navy);letter-spacing:-.01em;text-wrap:balance}
+#n1 .tx{display:inline-block;font-size:25px;font-weight:500;color:var(--coral);background:var(--coralS);padding:9px 26px;border-radius:999px;letter-spacing:0;line-height:1.4;min-height:53px}
+.caret{display:inline-block;width:3px;height:.95em;background:var(--coral);vertical-align:-.12em;margin-left:4px;border-radius:2px}
+#n2mk{left:598px;top:196px;width:84px;height:84px}
+#endav{left:580px;top:110px;width:120px;height:120px}
+#cap{left:0;top:612px;width:1280px;height:84px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:21px;font-weight:500;color:var(--navy);line-height:1.75}
+#cap span{max-width:1000px;background:#fff;padding:5px 20px;border-radius:14px;box-decoration-break:clone;-webkit-box-decoration-break:clone;box-shadow:0 10px 30px rgba(30,35,80,.10)}
+
+/* end */
+#endc{left:0;top:280px;width:1280px;display:grid;justify-items:center;gap:6px;text-align:center}
+#endc .row{display:flex;align-items:center;gap:16px;position:relative}
+#emk{width:66px;height:66px}
+#ewm{font-weight:600;font-size:54px;letter-spacing:-.02em;line-height:1}
+#esw{position:absolute;left:96px;top:56px;width:270px;height:36px;overflow:visible}
+#endc p{font-size:22px;color:var(--muted);margin:22px 0 0}
+#ecta{position:relative;margin-top:20px;background:var(--coral);color:#fff;font-weight:600;font-size:20px;padding:12px 34px;border-radius:999px;box-shadow:0 14px 34px rgba(242,67,90,.35)}
+#ecta::before{content:"";position:absolute;left:50%;top:-8px;margin-left:-9px;border:9px solid transparent;border-top:0;border-bottom:9px solid var(--coral)}
+#endc small{font-size:13.5px;color:var(--muted);margin-top:14px}
+
+/* tender */
+#tender{left:290px;top:112px;width:700px;padding:30px 36px 28px;display:grid;gap:14px;transform-origin:50% 60%}
+#tender .tileic{position:absolute;left:-28px;top:-28px}
+#tender .doc{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-left:22px}
+#tender h3{margin:0;font-size:27px;font-weight:600;letter-spacing:-.01em}
+#tender .clause{font-size:20.5px;line-height:1.7;margin:0;color:var(--ink)}
+#tender mark{background:linear-gradient(var(--coralS),var(--coralS)) no-repeat 0 0/0% 100%;color:inherit;padding:1px 2px;margin:0 -2px;border-radius:5px;box-shadow:inset 0 -2px 0 rgba(242,67,90,0)}
+#tender .ref{font-size:14px;color:var(--muted)}
+#tender .sec{font-size:13px;font-weight:500;color:var(--blue);background:var(--blueS);padding:3px 12px;border-radius:999px}
+
+/* manual */
+#mlist{left:60px;top:96px;width:530px;padding:18px 18px 14px;display:grid;gap:3px}
+#mlist .hdl{display:flex;align-items:center;justify-content:space-between;padding:0 8px 8px}
+#mlist .hdl b{font-size:17px;font-weight:600}
+#mlist .row{display:grid;grid-template-columns:44px 1fr 186px;gap:8px;padding:8px 8px;border-radius:10px;font-size:14.5px;align-items:center}
+#mlist .row .st{font-size:12.5px;text-align:right;color:var(--muted)}
+#mlist .row .st.w{color:var(--warn);font-weight:500} #mlist .row .st.b{color:var(--coral);font-weight:500}
+#mside{left:0;top:0;width:1280px;height:720px}
+#mlines{position:absolute;left:0;top:0;width:1280px;height:720px;overflow:visible}
+#mlines line{stroke:#a7aeea;stroke-width:1.6;stroke-dasharray:6 7;stroke-linecap:round}
+#mav{left:864px;top:284px;width:132px;height:132px;visibility:visible;opacity:1}
+#mname{position:absolute;left:830px;top:427px;width:200px;text-align:center}
+#mclock{position:absolute;left:770px;top:74px;width:320px;padding:10px 22px 12px;border-radius:24px;background:var(--coralS);text-align:center;display:grid;gap:0;box-shadow:0 12px 30px rgba(242,67,90,.12)}
+#mclock span{font-size:13px;color:var(--coral);font-weight:500}
+#mclock b{font-size:38px;line-height:1.15;font-weight:700;color:var(--coral);font-variant-numeric:tabular-nums}
+#mclock small{font-size:12.5px;color:#b0485a}
+.anc{position:absolute;width:0;height:0;visibility:hidden;opacity:0}
+.regp{position:absolute;left:0;top:0;transform:translate(-50%,-50%);display:flex;align-items:center;gap:10px;background:#fff;border-radius:999px;padding:9px 18px 9px 10px;white-space:nowrap;box-shadow:0 14px 34px rgba(30,35,80,.10),0 2px 6px rgba(30,35,80,.05)}
+.regp i{width:30px;height:30px;border-radius:50%;background:var(--blueS);color:var(--blue);display:grid;place-items:center;font-style:normal;font-weight:600;font-size:13px;flex:none}
+.regp b{display:block;font-weight:500;font-size:15px;line-height:1.2}
+.regp small{display:block;font-size:12px;color:var(--muted);line-height:1.2}
+
+/* app window */
+#win{left:170px;top:30px;width:940px;height:560px;overflow:hidden;border-radius:22px;transform-origin:50% 50%}
+#win .side{position:absolute;left:0;top:0;width:72px;height:560px;border-right:1px solid var(--line);background:#fff;display:flex;flex-direction:column;align-items:center;padding-top:18px;gap:14px}
+#win .side .mk{width:38px;height:38px;margin-bottom:14px}
+#win .si{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;color:#a5a9c4}
+#win .si svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#win .si.on{background:var(--coralS);color:var(--coral)}
+#win .hdr{position:absolute;left:72px;top:0;width:868px;height:72px;display:flex;align-items:center;gap:12px;padding:0 22px 0 28px;background:#fff}
+#win .hdr>b{font-size:22px;font-weight:600;letter-spacing:-.01em}
+#win .crumb{color:var(--muted);font-size:14px}
+#win .pilot{margin-left:auto;font-size:12px;font-weight:500;padding:3px 11px;border-radius:999px;background:var(--warnS);color:#b06d00}
+#win .search{width:170px;height:34px;border-radius:999px;background:#fff;border:1px solid var(--line);box-shadow:0 4px 12px rgba(30,35,80,.05);display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 16px;font-size:12.5px;color:#a5a9c4}
+#win .search svg,#win .bell svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+#win .bell{color:var(--coral);display:grid;place-items:center;width:24px}
+#win .me{position:relative;width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid #fff;box-shadow:0 0 0 1.5px var(--blueS)}
+#win .me svg{display:block;width:100%;height:100%}
+#win .content{position:absolute;left:72px;top:72px;width:868px;height:488px;background:#f8f8fc;border-top:1px solid var(--line)}
+.pane{position:absolute;inset:0}
+
+/* upload pane */
+#p-up h4{position:absolute;left:154px;top:34px;margin:0;font-size:24px;font-weight:600;letter-spacing:-.01em}
+#p-up .sub{position:absolute;left:154px;top:72px;font-size:14.5px;color:var(--muted)}
+#drop{position:absolute;left:154px;top:118px;width:560px;height:260px;border:2px dashed #c9cce6;border-radius:20px;background:#fff;display:grid;place-items:center;align-content:center;gap:8px;text-align:center}
+#drop .ic{width:62px;height:62px;border-radius:18px;background:var(--blueS);color:var(--blue);display:grid;place-items:center;margin-bottom:4px}
+#drop .ic svg{width:30px;height:30px}
+#drop b{font-size:20px;font-weight:600}
+#drop .done{display:grid;justify-items:center;gap:6px}
+#drop .done .fn{display:flex;align-items:center;gap:12px;font-weight:600;font-size:18px}
+#drop .done small{font-size:13px;color:#fff;background:var(--ok);font-weight:500;padding:2px 12px;border-radius:999px}
+.xl{width:34px;height:40px;border-radius:7px;background:#17a05d;position:relative;flex:none}
+.xl::after{content:"";position:absolute;left:7px;top:9px;width:20px;height:22px;background:linear-gradient(#fff 0 0) 0 33%/100% 2px no-repeat,linear-gradient(#fff 0 0) 0 66%/100% 2px no-repeat,linear-gradient(90deg,#fff 0 0) 50% 0/2px 100% no-repeat;opacity:.9}
+#dfile{left:0;top:0;width:250px;height:64px;padding:0 14px;display:flex;align-items:center;gap:12px;font-weight:500;font-size:15px;border-radius:16px;z-index:15}
+#dfile small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+
+/* processing pane */
+#pcard{position:absolute;left:104px;top:22px;width:660px;padding:22px 26px;display:grid;gap:14px}
+#pcard h4{margin:0;font-size:21px;font-weight:600}
+#pbar{height:7px;border-radius:4px;background:var(--lav);overflow:hidden}#pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--peri));border-radius:4px}
+#psteps{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+#psteps li{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:10px;align-items:center;color:#a5a9c4;font-size:14.5px}
+#psteps li small{font-size:12.5px;color:var(--muted);text-align:right;white-space:nowrap}
+#psteps li.son,#psteps li.sdone{color:var(--navy)}
+#psteps .pi{width:18px;height:18px;border-radius:50%;border:2px solid #d9dbea;position:relative}
+#psteps li.son .pi{border-color:var(--blue);border-right-color:transparent}
+#psteps li.sdone .pi{border-color:var(--ok);background:var(--ok)}
+#psteps li.sdone .pi::after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+#plog{font-family:var(--f-mono);font-size:12px;background:var(--lav);border-radius:12px;padding:10px 14px;height:128px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;color:var(--muted)}
+#plog div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#plog b{color:var(--navy);font-weight:500}#plog .g{color:var(--ok)}#plog .r{color:var(--coral)}
+
+/* results pane */
+#p-res .hd{position:absolute;left:28px;top:16px;width:600px}
+#p-res .hd b{display:block;font-size:21px;font-weight:600;line-height:1.2;letter-spacing:-.01em}
+#p-res .hd span{font-size:13px;color:var(--muted)}
+#dlbtn{position:absolute;left:672px;top:20px;width:168px;height:38px}
+#resbody{position:absolute;inset:0}
+#tiles{position:absolute;left:28px;top:74px;width:812px;height:84px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+#tiles>div{background:#fff;border-radius:14px;padding:10px 16px;display:grid;align-content:start;box-shadow:0 8px 22px rgba(30,35,80,.06);border:1px solid var(--line)}
+#tiles .k{font-size:12.5px;color:var(--muted)}
+#tiles .v{font-size:27px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums}
+#tiles .tb{height:5px;border-radius:3px;background:var(--lav);display:flex;overflow:hidden;margin-top:4px}#tiles .tb i{display:block;height:100%}
+#mlab{position:absolute;left:28px;top:170px;display:flex;align-items:center;gap:8px;font-size:17px;font-weight:600}
+#mlab span{font-size:12.5px;font-weight:600;padding:0 9px;border-radius:999px;background:var(--coralS);color:var(--coral)}
+.rrow{position:absolute;left:28px;width:812px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 16px;box-shadow:0 6px 18px rgba(30,35,80,.05)}
+.rrow .l1{display:flex;align-items:baseline;gap:10px;font-size:15px}
+.rrow .l1 .code{color:var(--blue);font-size:13px;font-weight:600}
+.rrow .l1 b{font-weight:500}
+.rrow .l2{font-size:12.5px;color:var(--muted);margin-left:42px}
+.rrow .pill{position:absolute;right:16px;top:11px}
+#r05{top:200px;height:118px}#r14{top:326px;height:84px}#r17{top:418px;height:56px}
+#r05 .alt{position:absolute;left:56px;top:64px;width:740px;height:42px;border-radius:10px;background:var(--lav);display:flex;align-items:center;padding:0 12px;font-size:13.5px;gap:10px}
+#r05 .alt .eb{font-size:11.5px;color:var(--blue);font-weight:600}
+#b05{position:absolute;left:620px;top:70px;width:168px;height:30px;font-size:13px}
+#b14{position:absolute;left:606px;top:40px;width:190px;height:32px;font-size:13px}
+#reqp{position:absolute;left:380px;top:14px;width:470px;height:464px;padding:16px 20px;display:grid;grid-template-rows:auto auto 1fr auto;gap:8px;border-radius:18px}
+#reqp h5{margin:0;font-size:18px;font-weight:600}
+#reqp .to{font-size:13.5px;color:var(--muted)}
+#reqp .to b{color:var(--navy);font-weight:500}
+#reqp pre{margin:0;background:var(--lav);border-radius:12px;padding:10px 14px;font:12.3px/1.47 var(--f);white-space:pre-wrap;overflow:hidden;color:var(--ink)}
+#reqp .btn{justify-self:start;height:32px;padding:0 16px;font-size:13px}
+
+/* download pane */
+#dlines{position:absolute;left:0;top:0;width:868px;height:488px;overflow:visible}
+#dlines .dl{fill:none;stroke:#a7aeea;stroke-width:2;stroke-dasharray:5 6;stroke-linecap:round}
+#dlines .dm{fill:none;stroke:#fff;stroke-width:8;stroke-dasharray:1 1}
+#dlines circle{fill:var(--coral)}
+#zip{left:374px;top:0;width:120px;display:grid;justify-items:center;gap:8px;text-align:center;transform-origin:50% 0}
+#zip .zi{width:110px;height:110px;border-radius:28px;background:var(--navy);position:relative;box-shadow:0 18px 40px rgba(30,35,80,.30)}
+#zip .zi::before{content:"";position:absolute;left:49px;top:0;width:12px;height:58px;background:repeating-linear-gradient(#fff 0 6px,transparent 6px 12px);opacity:.85}
+#zip .zi::after{content:".zip";position:absolute;left:0;right:0;bottom:14px;text-align:center;color:#fff;font-weight:600;font-size:15px}
+#zip .tab{position:absolute;left:44px;top:56px;width:22px;height:16px;border-radius:5px;background:var(--coral)}
+#zip b{font-size:14px;font-weight:500;white-space:nowrap}
+.fold{position:absolute;top:250px;width:250px;height:176px;padding:18px 20px;display:grid;align-content:start;gap:3px}
+.fold .tileic{width:50px;height:50px;border-radius:15px;margin-bottom:8px;box-shadow:0 10px 24px rgba(116,128,232,.25)}
+.fold .tileic svg{width:26px;height:26px}
+.fold .n{position:absolute;right:18px;top:16px;font-size:13px;font-weight:600;color:var(--blue);background:var(--blueS);width:26px;height:26px;border-radius:50%;display:grid;place-items:center}
+.fold b{font-size:20px;font-weight:600}
+.fold span{font-size:13.5px;color:var(--muted);line-height:1.4}
+#rep{position:absolute;left:264px;top:10px;width:340px;height:470px;padding:0;overflow:hidden;border-radius:10px}
+#rep .rh{background:var(--navy);color:#fff;padding:14px 16px;display:grid;gap:2px}
+#rep .rh b{font-size:16px;font-weight:600}#rep .rh span{font-size:10.5px;opacity:.85}
+#rep .rt{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:12px 14px 6px}
+#rep .rt div{background:var(--lav);border-radius:6px;padding:5px 7px;border-top:3px solid var(--ok);font-size:9px;color:var(--muted)}
+#rep .rt div b{display:block;font-size:15px;color:var(--navy);font-weight:600}
+#rep h6{margin:7px 14px 3px;font-size:11.5px;font-weight:600;color:var(--blue)}
+#rep h6.m{color:var(--coral)}
+#rep .ln{display:grid;grid-template-columns:24px 1fr 46px;gap:6px;align-items:center;margin:0 14px;padding:2px 0;line-height:1.35;border-bottom:1px solid var(--lav);font-size:9px;color:var(--muted)}
+#rep .ln i{display:block;height:6px;border-radius:3px;background:var(--lav)}
+#rep .ln em{font-style:normal;font-weight:600;color:var(--ok);text-align:right}
+#rep .ln em.r{color:var(--coral)}
+#rep .ln em.c{color:var(--warn)}
+#rep .ln em.d{color:var(--muted)}
+
+/* cursor */
+#cur{left:0;top:0;width:30px;height:38px;z-index:20;filter:drop-shadow(0 4px 6px rgba(30,35,80,.25))}
+#ring{left:0;top:0;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;border:3px solid var(--coral);z-index:19}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="top"><a class="logo" href="../" aria-label="EPDesk bid demo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#1e2350"/><path d="M21 13h16l10 10v27a3 3 0 0 1-3 3H21a3 3 0 0 1-3-3V16a3 3 0 0 1 3-3z" fill="#fff"/><path d="M37 13v10h10z" fill="#f2435a"/><path d="M25 37l5.5 5.5L41 31" fill="none" stroke="#f2435a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>EP</b>Desk</span></a></div>
+  <div class="intro">
+    <span class="eyebrow">Pilot film · 1:30 · silent</span>
+    <h1>From bid to EPD pack in minutes</h1>
+    <p>Sara uploads the list of materials for a bid, EPDesk finds the EPDs, and she downloads one file with everything the client asked for.</p>
+  </div>
+
+  <figure class="player" id="player">
+    <div class="screen" id="screen" role="img" aria-label="Animated film of EPDesk: Sara, a bid manager, gets a tender for a hydrogen project that asks for a verified EPD for every product. Searching by hand takes hours. She uploads the list of materials, EPDesk reads the requirements and finds the EPDs, gaps are fixed with a renewed EPD and a drafted supplier request, and a zip with the EPDs, the bid and a report is downloaded.">
+      <div class="stage" id="stage">
+        <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+          <defs>
+            <linearGradient id="saraBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6e9ff"/><stop offset="1" stop-color="#ffe3e8"/></linearGradient>
+            <linearGradient id="swg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1e2350"/><stop offset=".65" stop-color="#5a62b8"/><stop offset="1" stop-color="#f2435a"/></linearGradient>
+          </defs>
+        </svg>
+        <div class="blob b1" id="g1"></div><div class="blob b2" id="g2"></div><div class="blob b3" id="g3"></div>
+
+        <!-- intro -->
+        <div class="layer" id="intro">
+          <div class="row"><span class="mk" id="imk"></span><span id="iwm"><b>EP</b>Desk</span></div>
+          <svg id="isw" viewBox="0 0 330 44"><path class="swp" id="iswp" pathLength="1" d="M8 26 C 90 42, 210 40, 318 10"/></svg>
+          <p id="itag">Every EPD for your bid, in one click</p>
+        </div>
+
+        <!-- persona -->
+        <div class="layer" id="persona">
+          <div id="pglow"></div>
+          <div class="halo" id="h3"></div><div class="halo" id="h2"></div><div class="halo" id="h1"></div>
+          <div class="av" id="pav"></div>
+          <div id="pname"><span class="npill"><b>Sara</b><span>· Bid Manager</span></span></div>
+        </div>
+
+        <div class="layer narr" id="n1"><span class="tx"></span></div>
+        <div class="layer narr" id="n2"><span class="tx"></span></div>
+        <div class="layer narr" id="n3"><span class="tx"></span></div>
+        <div class="layer mk" id="n2mk"></div>
+        <div class="layer av" id="endav"></div>
+
+        <!-- tender -->
+        <div class="layer card" id="tender">
+          <span class="tileic"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h11l6 6v18H8z"/><path d="M19 4v6h6M12 16h9M12 21h6"/></svg></span>
+          <div class="doc"><span class="eb">Tender documents · Hydrogen Project</span><span class="sec">Section 4.3</span></div>
+          <h3>Environmental documentation</h3>
+          <p class="clause">The supplier shall document <mark data-a="6.6" data-b="7.4">every product in the bid</mark> with a <mark data-a="7.6" data-b="8.5">third-party verified EPD</mark> to NS-EN 15804+A2. Product-specific EPDs shall be used. EPDs shall be <mark data-a="8.7" data-b="9.4">valid at delivery</mark>.</p>
+          <span class="ref">Planned delivery 01.03.2027 · total GWP A1–A3 to be stated</span>
+        </div>
+
+        <!-- manual search -->
+        <div class="layer card" id="mlist">
+          <div class="hdl"><b>Bid TILB-2026-114</b><span class="eb">20 lines</span></div>
+          <div class="row"><span class="muted">L01</span><span>IFSI-EMC 1kV 3x16/16</span><span class="st" data-a="12.4">PEP found, valid 2030</span></div>
+          <div class="row"><span class="muted">L04</span><span>Kabelstige 300 mm forzinket</span><span class="st w" data-a="13.1">Datasheet, no EPD link</span></div>
+          <div class="row"><span class="muted">L05</span><span>Kabelstige 600 mm VFZ</span><span class="st b" data-a="13.8">EPD expired 08.2026</span></div>
+          <div class="row"><span class="muted">L08</span><span>Gjengestang M10 1 m VFZ</span><span class="st w" data-a="14.5">Issued 2022, still valid?</span></div>
+          <div class="row"><span class="muted">L12</span><span>LED høytaksarmatur DALI</span><span class="st" data-a="15.2">Found on EPD-Norge</span></div>
+          <div class="row"><span class="muted">L14</span><span>Nødlysarmatur LED</span><span class="st b" data-a="15.9">Not found</span></div>
+          <div class="row"><span class="muted">L17</span><span>Automatsikring iC60N 1P B16</span><span class="st" data-a="16.6">Searching…</span></div>
+          <div class="row"><span class="muted">L18</span><span>CEE-uttak 16A 5P IP44</span><span class="st" data-a="99">—</span></div>
+        </div>
+        <div class="layer" id="mside">
+          <svg id="mlines" viewBox="0 0 1280 720"></svg>
+          <div class="anc" data-a="12.0" data-i="0"><div class="regp"><i>N</i><span><b>EPD-Norge</b><small>search results</small></span></div></div>
+          <div class="anc" data-a="12.7" data-i="1"><div class="regp"><i>E</i><span><b>EFObasen</b><small>product sheet</small></span></div></div>
+          <div class="anc" data-a="13.4" data-i="2"><div class="regp"><i>N</i><span><b>NOBB</b><small>product</small></span></div></div>
+          <div class="anc" data-a="14.1" data-i="3"><div class="regp"><i>P</i><span><b>PEP ecopassport</b><small>registry</small></span></div></div>
+          <div class="anc" data-a="14.8" data-i="4"><div class="regp"><i>M</i><span><b>Manufacturer site</b><small>downloads</small></span></div></div>
+          <div class="anc" data-a="15.5" data-i="5"><div class="regp"><i>%</i><span><b>EPD.pdf</b><small>38 pages</small></span></div></div>
+          <div class="av" id="mav"></div>
+          <div id="mname"><span class="npill sm"><b>Sara</b></span></div>
+          <div id="mclock"><span>Time spent finding EPDs</span><b id="clock">0 h 00 min</b><small>7 of 20 lines checked</small></div>
+        </div>
+
+        <!-- app window -->
+        <div class="layer card" id="win">
+          <div class="side">
+            <span class="mk" id="smk"></span>
+            <span class="si"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg></span>
+            <span class="si on"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 14l2 2 4-4"/></svg></span>
+            <span class="si"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg></span>
+            <span class="si"><svg viewBox="0 0 24 24"><path d="M5 4h4v16H5zM10 4h4v16h-4zM15.5 5l3.8-1 3.2 15.5-3.8 1z"/></svg></span>
+            <span class="si"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg></span>
+            <span class="si"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></span>
+          </div>
+          <div class="hdr">
+            <b>Bid check</b><span class="crumb">/ Hydrogen Project</span>
+            <span class="pilot">Pilot</span>
+            <span class="search">Search<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg></span>
+            <span class="bell"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/></svg></span>
+            <span class="me" id="hav"></span>
+          </div>
+          <div class="content">
+            <div class="pane layer" id="p-up">
+              <h4>Upload the list of materials</h4>
+              <span class="sub">Excel or CSV. The EPD requirements can be on their own sheet.</span>
+              <div id="drop">
+                <div id="drop-empty" style="display:grid;justify-items:center;gap:4px">
+                  <span class="ic"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="20" height="24" rx="3"/><path d="M6 11h20M6 18h20M13 11v17"/></svg></span>
+                  <b>Drop the list here</b><span class="muted" style="font-size:14px">or choose a file</span>
+                </div>
+                <div class="done" id="drop-done" style="display:none">
+                  <span class="fn"><i class="xl"></i>TILB-2026-114.xlsx</span>
+                  <span class="muted" style="font-size:14px">20 lines on "Materials" · requirements on "EPD requirements"</span>
+                  <small>Uploaded</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="pane layer" id="p-proc">
+              <div class="card" id="pcard">
+                <div style="display:grid;gap:2px"><span class="eb">Processing</span><h4>Checking TILB-2026-114.xlsx</h4></div>
+                <div id="pbar"><i></i></div>
+                <ol id="psteps"></ol>
+                <div id="plog"></div>
+              </div>
+            </div>
+
+            <div class="pane layer" id="p-res">
+              <div class="hd"><b>Hydrogen Project, electrical package</b><span>Quote TILB-2026-114 · delivery 01.03.2027 · 20 lines</span></div>
+              <span class="btn" id="dlbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m-5-5l5 5 5-5M5 20h14"/></svg>Download zip</span>
+              <div id="resbody">
+                <div id="tiles">
+                  <div><span class="k">EPDs ready</span><span class="v" style="color:var(--ok)" id="tv1">0 / 20</span><span class="tb"><i id="tb1" style="background:var(--ok)"></i><i id="tb2" style="background:var(--warn)"></i><i id="tb3" style="background:var(--coral)"></i></span></div>
+                  <div><span class="k">Found, to check</span><span class="v" style="color:var(--warn)" id="tv2">0</span></div>
+                  <div><span class="k">Missing</span><span class="v" style="color:var(--coral)" id="tv3">0</span></div>
+                  <div><span class="k">Package GWP, A1–A3</span><span class="v" id="tv4">0.0 t</span></div>
+                </div>
+                <div id="mlab">Missing <span id="mcount">5</span></div>
+                <div class="rrow" id="r05">
+                  <div class="l1"><span class="code">L05</span><b>Kabelstige 600 mm VFZ</b><span class="muted">120 m</span></div>
+                  <div class="l2" id="r05l2">Brattli Støtte BS-600 · NEPD-DEMO-2202 · valid to 31.08.2026</div>
+                  <span class="pill bad" id="p05">Expired</span>
+                  <div class="alt" id="a05"><span class="eb">Renewed EPD</span><span id="a05t">NEPD-DEMO-2207, valid to 30.09.2031 · −8% GWP</span></div>
+                  <span class="btn" id="b05">Use renewed EPD</span>
+                </div>
+                <div class="rrow" id="r14">
+                  <div class="l1"><span class="code">L14</span><b>Nødlysarmatur LED</b><span class="muted">18 stk</span></div>
+                  <div class="l2">Lysvik NL-3 LED emergency luminaire · no EPD published</div>
+                  <span class="pill bad">No EPD</span>
+                  <span class="btn ghost" id="b14">Draft supplier request</span>
+                </div>
+                <div class="rrow" id="r17">
+                  <div class="l1"><span class="code">L17</span><b>Automatsikring iC60N 1P B16</b><span class="muted">24 stk</span></div>
+                  <span class="pill bad">Expired</span>
+                </div>
+              </div>
+              <div class="card layer" id="reqp">
+                <h5>Supplier request · L14</h5>
+                <span class="to">To: <b>Lysvik</b> (add your contact)</span>
+                <pre id="reqtext"></pre>
+                <span class="btn">Copy request</span>
+              </div>
+            </div>
+
+            <div class="pane layer" id="p-dl">
+              <svg id="dlines" viewBox="0 0 868 488">
+                <defs>
+                  <mask id="dm0" maskUnits="userSpaceOnUse" x="0" y="0" width="868" height="488"><path class="dm" id="dmp0" pathLength="1" d="M434 140 C434 200 154 190 154 250"/></mask>
+                  <mask id="dm1" maskUnits="userSpaceOnUse" x="0" y="0" width="868" height="488"><path class="dm" id="dmp1" pathLength="1" d="M434 140 C434 190 434 200 434 250"/></mask>
+                  <mask id="dm2" maskUnits="userSpaceOnUse" x="0" y="0" width="868" height="488"><path class="dm" id="dmp2" pathLength="1" d="M434 140 C434 200 714 190 714 250"/></mask>
+                </defs>
+                <path class="dl" mask="url(#dm0)" d="M434 140 C434 200 154 190 154 250"/>
+                <path class="dl" mask="url(#dm1)" d="M434 140 C434 190 434 200 434 250"/>
+                <path class="dl" mask="url(#dm2)" d="M434 140 C434 200 714 190 714 250"/>
+                <circle id="dd0" cx="154" cy="250" r="4"/><circle id="dd1" cx="434" cy="250" r="4"/><circle id="dd2" cx="714" cy="250" r="4"/>
+              </svg>
+              <div class="layer" id="zip"><div class="zi"><span class="tab"></span></div><b>EPDesk pack TILB-2026-114.zip</b></div>
+              <div class="card fold layer" id="f1"><span class="tileic"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M10 7h12v19H10z"/><path d="M6 11v19h12" stroke-linecap="round"/><path d="M14 13h4M14 18h4" stroke-linecap="round"/></svg></span><span class="n">1</span><b>EPDs</b><span>16 PDFs, named by bid line</span></div>
+              <div class="card fold layer" id="f2"><span class="tileic" style="color:var(--ok)"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="6" y="5" width="20" height="22" rx="3"/><path d="M6 12h20M6 19h20M13 12v15"/></svg></span><span class="n">2</span><b>Bid</b><span>TILB-2026-114.xlsx, returned unchanged</span></div>
+              <div class="card fold layer" id="f3"><span class="tileic" style="color:var(--blue)"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h11l6 6v18H8z"/><path d="M19 4v6h6M12 23v-4M16 23v-7M20 23v-5"/></svg></span><span class="n">3</span><b>Report</b><span>What is there, what is missing, alternatives and supplier requests</span></div>
+              <div class="card layer" id="rep">
+                <div class="rh"><b>EPD coverage report</b><span>Hydrogen Project, electrical package · Quote TILB-2026-114</span></div>
+                <div class="rt"><div>Ready<b>10/20</b></div><div style="border-top-color:var(--warn)">To check<b>6</b></div><div style="border-top-color:var(--coral)">Missing<b>4</b></div><div style="border-top-color:var(--blue)">GWP<b>16.9 t</b></div></div>
+                <h6>1. What is there: EPDs in the pack</h6>
+                <div class="ln"><span>L01</span><i style="width:90%"></i><em>Ready</em></div>
+                <div class="ln"><span>L02</span><i style="width:75%"></i><em>Ready</em></div>
+                <div class="ln"><span>L03</span><i style="width:82%"></i><em>Ready</em></div>
+                <div class="ln"><span>L04</span><i style="width:70%"></i><em>Ready</em></div>
+                <div class="ln"><span>L05</span><i style="width:86%"></i><em>Ready</em></div>
+                <div class="ln"><span>L06</span><i style="width:64%"></i><em class="c">Check</em></div>
+                <div class="ln"><span>L07</span><i style="width:78%"></i><em>Ready</em></div>
+                <h6 class="m">2. What is missing</h6>
+                <div class="ln"><span>L10</span><i style="width:80%"></i><em class="r">Expired</em></div>
+                <div class="ln"><span>L14</span><i style="width:66%"></i><em class="r">No EPD</em></div>
+                <div class="ln"><span>L17</span><i style="width:72%"></i><em class="r">Expired</em></div>
+                <div class="ln"><span>L20</span><i style="width:58%"></i><em class="r">No EPD</em></div>
+                <h6>3. Supplier requests</h6>
+                <div class="ln"><span>L08</span><i style="width:88%"></i><em class="d">Drafted</em></div>
+                <div class="ln"><span>L14</span><i style="width:80%"></i><em class="d">Drafted</em></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- file being dragged -->
+        <div class="layer card" id="dfile"><i class="xl"></i><div>TILB-2026-114.xlsx<small>List of materials · 2 sheets</small></div></div>
+
+        <!-- end card -->
+        <div class="layer" id="endc">
+          <div class="row"><span class="mk" id="emk"></span><span id="ewm"><b>EP</b>Desk</span>
+            <svg id="esw" viewBox="0 0 270 36"><path class="swp" id="eswp" pathLength="1" d="M6 20 C 80 34, 170 32, 262 8"/></svg></div>
+          <p>Every EPD for your bid, in one click.</p>
+          <span id="ecta">Join the pilot</span>
+          <small>Pilot · simulated data</small>
+        </div>
+
+        <div class="layer" id="cap"><span id="capt"></span></div>
+        <div class="layer" id="ring"></div>
+        <svg class="layer" id="cur" viewBox="0 0 30 38"><path d="M3 3 L3 31 L10.5 24 L15.5 35 L20.5 32.8 L15.5 22 L26 22 Z" fill="#1e2350" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/></svg>
+      </div>
+      <button class="bigplay" id="bigplay" aria-label="Play film"><svg viewBox="0 0 24 24"><path d="M6 4l15 8-15 8z" fill="currentColor"/></svg></button>
+    </div>
+    <div class="controls">
+      <button class="cbtn" id="pp" aria-label="Play"><svg viewBox="0 0 24 24" id="ppi"><path d="M6 4l15 8-15 8z" fill="currentColor"/></svg></button>
+      <span class="time" id="time">0:00 / 1:30</span>
+      <input type="range" id="scrub" min="0" max="900" step="1" value="0" aria-label="Position in film">
+      <button class="cbtn" id="fs" aria-label="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    </div>
+  </figure>
+  <p class="subline" id="subline" aria-live="off"></p>
+
+  <ol class="chapters" id="chapters"></ol>
+  <p class="fine">Silent, with on-screen narration. Sara, the bid, the installer and several products are invented for the demo. <a href="../">Try the interactive bid check</a>.</p>
+</div>
+
+<script>
+(function(){
+'use strict';
+const T=90, D=2.2;
+const $=s=>document.querySelector(s);
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const lin=(t,a,b)=>clamp((t-a)/(b-a));
+const ease=p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+const eo=p=>1-Math.pow(1-p,3);
+const back=p=>{const c1=1.6,c3=c1+1;return 1+c3*Math.pow(p-1,3)+c1*Math.pow(p-1,2);};
+const env=(t,a,b,fi=.5,fo=.5)=>Math.min(eo(lin(t,a,a+fi)),1-ease(lin(t,b-fo,b)));
+function vis(el,o){el.style.opacity=o.toFixed(3);el.style.visibility=o<=0.002?'hidden':'visible';}
+function show(el,o,x=0,y=0,s=1){vis(el,o);el.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px) scale('+s.toFixed(4)+')';}
+function put(el,o,tf){vis(el,o);el.style.transform=tf;}
+const typed=(s,t,a,cps)=>s.slice(0,Math.max(0,Math.min(s.length,Math.floor((t-a)*cps))));
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+// ---------- artwork ----------
+const MARK='<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#1e2350"/><path d="M21 13h16l10 10v27a3 3 0 0 1-3 3H21a3 3 0 0 1-3-3V16a3 3 0 0 1 3-3z" fill="#fff"/><path d="M37 13v10h10z" fill="#f2435a"/><path d="M25 37l5.5 5.5L41 31" fill="none" stroke="#f2435a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function sara(mood){
+  const w=mood==='worried';
+  const brows=w?'<path d="M80 86 Q87 85 94 81" /><path d="M106 81 Q113 85 120 86" />':'<path d="M80 85 Q87 80 94 83" /><path d="M106 83 Q113 80 120 85" />';
+  const mouth=w?'<path d="M91 116 Q100 111 109 116" fill="none" stroke="#9c4250" stroke-width="2.8" stroke-linecap="round"/>'
+               :'<path d="M89 111 Q100 123 111 111 Q100 115 89 111Z" fill="#9c4250"/><path d="M92 112.5 Q100 115.5 108 112.5 Q100 114 92 112.5Z" fill="#fff"/>';
+  const drop=w?'<path d="M138 70 C134 78 133 82 138 84 C143 82 142 78 138 70Z" fill="#8fb2f2"/>':'';
+  return '<svg viewBox="0 0 200 200" aria-hidden="true">'
+   +'<rect width="200" height="200" fill="url(#saraBg)"/>'
+   +'<path d="M58 98 C52 56 78 40 102 40 C128 40 150 58 145 100 C143 124 147 140 154 152 C134 164 66 164 46 152 C55 138 60 122 58 98Z" fill="#4a2e27"/>'
+   +'<path d="M89 120 h22 v26 c0 7 -22 7 -22 0z" fill="#dda07e"/>'
+   +'<path d="M26 206 C28 172 50 156 82 150 L100 170 L118 150 C150 156 172 172 174 206Z" fill="#2a3170"/>'
+   +'<path d="M85 150 L100 174 L115 150 L107 146 L100 156 L93 146Z" fill="#fff"/>'
+   +'<path d="M82 150 L100 186 L88 204 L70 160Z" fill="#363e86"/><path d="M118 150 L100 186 L112 204 L130 160Z" fill="#363e86"/>'
+   +'<circle cx="134" cy="180" r="9" fill="#f2435a"/><path d="M135.5 172.5 l-5.5 8.5 h4.2 l-1.8 6.5 l6.2 -9.4 h-4.2z" fill="#fff"/>'
+   +'<ellipse cx="100" cy="94" rx="31" ry="36" fill="#ebb895"/>'
+   +'<path d="M67 98 C63 66 82 52 104 53 C124 54 136 68 134 96 C130 80 120 70 104 69 C92 70 86 76 80 84 C76 89 72 93 67 98Z" fill="#5b392f"/>'
+   +'<path d="M67 96 C64 116 66 134 72 148 L79 142 C73 126 72 110 74 92Z" fill="#5b392f"/><path d="M133 92 C136 114 134 132 128 148 L121 142 C127 126 128 110 126 90Z" fill="#5b392f"/>'
+   +'<g fill="none" stroke="#4a2e27" stroke-width="2.8" stroke-linecap="round">'+brows+'</g>'
+   +'<ellipse cx="88" cy="96" rx="3.2" ry="3.8" fill="#2b2233"/><ellipse cx="112" cy="96" rx="3.2" ry="3.8" fill="#2b2233"/>'
+   +'<path d="M100 99 q-3.5 6 0 8" fill="none" stroke="#c98a66" stroke-width="2" stroke-linecap="round"/>'
+   +'<circle cx="79" cy="108" r="6.5" fill="#f2435a" opacity=".16"/><circle cx="121" cy="108" r="6.5" fill="#f2435a" opacity=".16"/>'
+   +mouth+drop+'</svg>';
+}
+
+// ---------- script (times in u = t - D) ----------
+const NARR=[
+  {id:'n1',a:0.4,b:5.4,y:92,text:'Sara is the bid manager for an electrical installer in Oslo.'},
+  {id:'n2',a:17.7,b:21.6,y:300,cps:36,text:'With EPDesk, she uploads the list of materials for the bid instead.'},
+  {id:'n3',a:81.0,b:99,y:290,text:'From hours to minutes.'}
+];
+const CAPS=[
+  [5.8,11.0,'The tender asks for a verified EPD for every product in the bid.'],
+  [11.6,17.4,'By hand, that means hours on registries and manufacturer sites, line by line.'],
+  [22.2,27.4,'She drops in the list.'],
+  [27.8,34.6,'EPDesk reads the full document and matches each line with its specific E-number or description.'],
+  [34.8,41.4,'Then it finds the EPDs in the library, which is connected to all EPD program operators.'],
+  [42.0,47.4,'Within a minute she sees what is ready, what to check and what is missing.'],
+  [47.6,53.6,'Each gap comes with a fix, like a renewed EPD or an equivalent product that has one.'],
+  [53.8,61.8,'Where there is no EPD, EPDesk drafts the request to the supplier.'],
+  [65.4,72.8,'Everything comes back in one file: the EPDs as PDFs, the bid and a report.'],
+  [73.2,79.6,'The report shows what is there, what is missing and what has been asked for, before the bid goes out.']
+];
+const STEPS=[
+  ['Reading the full document','20 lines on "Materials" · 2 sheets'],
+  ['Interpreting the EPD requirements','6 rules read from "EPD requirements"'],
+  ['Matching products','11 by E-number · 9 by description'],
+  ['Searching the EPDesk library','8 EPDs found'],
+  ['Searching EPD program operators','10 EPDs found'],
+  ['Checking each line against the requirements','9 ready · 6 to check · 5 missing']
+];
+const S0=28.2,SD=2.0;
+const LOG=[
+  [28.5,'Sheets: <b>Materials</b>, <b>EPD requirements</b>'],
+  [29.1,'20 material lines found on "Materials"'],
+  [29.7,'Quote <b>TILB-2026-114</b> for Sample main contractor AS'],
+  [30.5,'Standard <b>NS-EN 15804+A2</b>, third-party verified'],
+  [31.1,'PEP ecopassport <b>accepted</b> · product-specific <b>required</b>'],
+  [31.7,'Valid at delivery <b>01.03.2027</b> · report GWP A1–A3'],
+  [32.4,'L01 IFSI-EMC 1kV 3x16/16 → <b>Nexans</b> (description 95%)'],
+  [32.8,'L03 RFOU 2x2x0,75 → <b>Kvasir Kabel</b> (E-number)'],
+  [33.2,'L04 Kabelstige 300 mm → <b>MP Bolagen</b> (description 91%)'],
+  [33.6,'L05 Kabelstige 600 mm → <b>Brattli Støtte</b> (E-number)'],
+  [34.0,'L12 LED høytaksarmatur → <b>Glamox</b> (description 90%)'],
+  [34.4,'L16 Automatsikring C60N → <b>Schneider Electric</b> (E-number)'],
+  [34.6,'L03 <b>PEP-DEMO-0458</b> · EPDesk library'],
+  [35.1,'L05 <b>NEPD-DEMO-2202</b> · EPDesk library'],
+  [35.6,'L07 <b>NEPD-DEMO-2210</b> · EPDesk library'],
+  [36.1,'L14 <span class="r">no EPD in the library</span>'],
+  [36.6,'L01 <b>NXNS-00404-V01.01-EN</b> · PEP ecopassport API'],
+  [37.0,'L04 <b>EPD-IES-0010314</b> · EPD International API'],
+  [37.4,'L10 <b>NEPD-2328-1070-NO</b> · EPD-Norge API'],
+  [37.8,'L12 <b>NEPD-12160-12165</b> · EPD-Norge API'],
+  [38.2,'L14 <span class="r">no EPD at any program operator</span>'],
+  [38.8,'Checking validity, format and verification'],
+  [39.6,'<span class="g">9 ready</span> · 6 to check · <span class="r">5 missing</span>']
+];
+const LETTER='Hello Lysvik team,\n\nWe are pricing the Hydrogen Project for Sample main contractor AS (our quote TILB-2026-114). The client requires product-specific, third-party verified EPDs to NS-EN 15804+A2, valid at delivery on 01.03.2027.\n\nCould you send us an EPD for this product?\n\n  Product: Lysvik NL-3 LED emergency luminaire\n  Quantity in our bid: 18 stk\n\nWe need it by 11.11.2026. The PDF and the registration number are enough.\n\nKind regards,\nSara';
+// cursor path in stage pixels (window is flat while the cursor is on screen)
+const CUR=[
+  [22.0,1240,650],[23.0,1150,470],[23.4,1150,470],[25.0,676,350],[25.3,676,350],[26.2,800,500],[26.8,820,510],
+  [46.8,700,560],[48.6,976,389],[49.6,976,389],[51.0,900,446],[54.6,975,486],[55.4,975,486],[56.6,840,540],
+  [62.6,840,540],[64.0,1004,141],[64.6,1004,141],[65.4,1004,141]
+];
+const CURVIS=[[22.0,26.8],[46.8,56.6],[62.6,65.4]];
+const CLICKS=[23.2,25.2,48.9,54.9,64.3];
+// camera on the app window: [u, rotX, rotY, rotZ, scale, x, y]
+const CAM=[
+  [21.4,22,-18,4,.86,0,40],[22.6,0,0,0,1,0,0],[27.8,0,0,0,1,0,0],
+  [29.2,10,-14,1.5,.96,24,0],[40.2,9,-9,1,.97,16,0],[41.4,0,0,0,1,0,0],
+  [56.6,0,0,0,1,0,0],[57.8,0,-6,0,1.05,-36,-6],[61.8,0,-5,0,1.06,-40,-8],[62.6,0,0,0,1,0,0],
+  [65.6,0,0,0,1,0,0],[66.8,10,9,-1,.97,0,0],[72.4,8,6,-1,.975,0,0],[73.4,0,0,0,1,0,0],
+  [79.8,0,0,0,1,0,0],[80.8,14,14,-2,.9,0,20]
+];
+const REG=[[740,236],[1120,236],[1150,360],[1110,484],[752,484],[730,360]];
+const AVC=[930,350];
+const CHAPTERS=[['Sara',D+0.3],['The tender',D+5.6],['Upload',D+17.8],['Processing',D+27.6],['Results',D+41.8],['The pack',D+64.8],['End',D+81]];
+
+// ---------- elements ----------
+const st={};
+['intro','imk','iwm','iswp','itag','persona','pglow','h1','h2','h3','pav','pname','n1','n2','n3','n2mk','endav','tender','mlist','mside','mlines','mav','mname','mclock','win','smk','hav','p-up','p-proc','p-res','p-dl','dfile','endc','emk','eswp','ecta','cap','capt','ring','cur','g1','g2','g3','drop','drop-empty','drop-done','pbar','psteps','plog','tv1','tv2','tv3','tv4','tb1','tb2','tb3','mcount','r05','p05','a05t','b05','r05l2','b14','resbody','reqp','reqtext','dlbtn','zip','f1','f2','f3','rep','clock','dmp0','dmp1','dmp2','dd0','dd1','dd2','dlines'].forEach(id=>st[id]=document.getElementById(id));
+['imk','n2mk','smk','emk'].forEach(id=>st[id].innerHTML=MARK);
+st.pav.innerHTML=sara('neutral');st.endav.innerHTML=sara('happy');st.hav.innerHTML=sara('happy');
+const marks=[...document.querySelectorAll('#tender mark')];
+const mstats=[...document.querySelectorAll('#mlist .st')];
+const mrows=[...document.querySelectorAll('#mlist .row')];
+const ancs=[...document.querySelectorAll('#mside .anc')];
+ancs.forEach(a=>{const p=REG[+a.dataset.i];a.style.left=p[0]+'px';a.style.top=p[1]+'px';});
+st.mlines.innerHTML=REG.map((p,i)=>'<line id="ml'+i+'" x1="'+AVC[0]+'" y1="'+AVC[1]+'" x2="'+p[0]+'" y2="'+p[1]+'"/>').join('');
+const mlines=REG.map((p,i)=>document.getElementById('ml'+i));
+st.psteps.innerHTML=STEPS.map((s,i)=>'<li id="ps'+i+'"><span class="pi"></span><span>'+s[0]+'</span><small id="psd'+i+'">Waiting</small></li>').join('');
+const psli=STEPS.map((s,i)=>document.getElementById('ps'+i)),psd=STEPS.map((s,i)=>document.getElementById('psd'+i));
+let mavMood='';
+
+function curPos(u){
+  let i=0;while(i<CUR.length-1&&CUR[i+1][0]<=u)i++;
+  const a=CUR[i],b=CUR[Math.min(i+1,CUR.length-1)];
+  if(u<=a[0]||a===b)return [a[1],a[2]];
+  const p=ease(lin(u,a[0],b[0]));return [a[1]+(b[1]-a[1])*p,a[2]+(b[2]-a[2])*p];
+}
+function cam(u){
+  let i=0;while(i<CAM.length-1&&CAM[i+1][0]<=u)i++;
+  const a=CAM[i],b=CAM[Math.min(i+1,CAM.length-1)];
+  const p=(u<=a[0]||a===b)?0:ease(lin(u,a[0],b[0]));
+  const v=k=>a[k]+(b[k]-a[k])*p;
+  return 'perspective(1800px) translate3d('+v(5).toFixed(1)+'px,'+v(6).toFixed(1)+'px,0) rotateX('+v(1).toFixed(2)+'deg) rotateY('+v(2).toFixed(2)+'deg) rotateZ('+v(3).toFixed(2)+'deg) scale('+v(4).toFixed(4)+')';
+}
+function caption(u){for(const c of CAPS){if(u>=c[0]&&u<c[1])return c;}return null;}
+function lift(el,u,a,b,press){
+  const l=(u>=a&&u<b+0.6)?ease(lin(u,a,b)):0;
+  const pr=u>=press&&u<press+0.2;
+  el.style.transform=pr?'translateY(-3px) scale(1.03)':'translateY('+(-4*l).toFixed(1)+'px) scale('+(1+0.12*l).toFixed(3)+')';
+  el.style.boxShadow=l>0.01?'0 '+(12*l).toFixed(0)+'px '+(26*l).toFixed(0)+'px rgba(51,64,168,'+(0.38*l).toFixed(2)+')':'none';
+  el.style.zIndex=l>0.01?'3':'';
+}
+
+let lastLog=-1,lastSub='';
+function render(t){
+  const u=t-D;
+  // ambient
+  st.g1.style.transform='translate('+(40*Math.sin(t/7)).toFixed(1)+'px,'+(30*Math.cos(t/9)).toFixed(1)+'px)';
+  st.g2.style.transform='translate('+(-50*Math.sin(t/8)).toFixed(1)+'px,'+(-30*Math.cos(t/6)).toFixed(1)+'px)';
+  st.g3.style.transform='translate('+(60*Math.cos(t/10)).toFixed(1)+'px,'+(40*Math.sin(t/7.5)).toFixed(1)+'px)';
+
+  // intro
+  const io=t<1.6?1:1-ease(lin(t,1.6,2.2));show(st.intro,io,0,-12*(1-io));
+  if(io>0){
+    const m=back(lin(t,0.05,0.6));st.imk.style.transform='scale('+(0.4+0.6*m).toFixed(3)+') rotate('+(-14*(1-lin(t,0.05,0.6))).toFixed(1)+'deg)';st.imk.style.opacity=lin(t,0.05,0.25).toFixed(2);
+    const w=eo(lin(t,0.25,0.75));st.iwm.style.opacity=w.toFixed(2);st.iwm.style.transform='translateX('+(-18*(1-w)).toFixed(1)+'px)';
+    st.iswp.style.strokeDashoffset=(1-ease(lin(t,0.5,1.3))).toFixed(3);
+    const g=eo(lin(t,0.7,1.1));st.itag.style.opacity=g.toFixed(2);st.itag.style.transform='translateY('+(8*(1-g)).toFixed(1)+'px)';
+  }
+
+  // persona
+  const po=env(u,0.25,5.5,.45,.4);
+  show(st.persona,po,0,0,1-.05*ease(lin(u,5.0,5.5)));
+  if(po>0){
+    const a=back(lin(u,0.25,0.95));st.pav.style.transform='scale('+(0.7+0.3*a).toFixed(3)+')';
+    [st.h1,st.h2,st.h3].forEach((h,i)=>{const p=eo(lin(u,0.35+i*.14,1.2+i*.14));h.style.opacity=p.toFixed(2);h.style.transform='scale('+(0.8+0.2*p+0.012*Math.sin(t*1.8+i*1.3)).toFixed(4)+')';});
+    st.pglow.style.transform='scale('+(1+0.05*Math.sin(t*1.4)).toFixed(3)+')';
+    const np=back(lin(u,0.9,1.35));st.pname.style.opacity=lin(u,0.9,1.1).toFixed(2);st.pname.style.transform='translateY('+(12*(1-np)).toFixed(1)+'px) scale('+(0.85+0.15*np).toFixed(3)+')';
+  }
+
+  // narration
+  let sub='';
+  for(const n of NARR){
+    const el=st[n.id],tx=el.firstElementChild,o=env(u,n.a,n.b,.3,.4);
+    if(o>0){
+      const txt=typed(n.text,u,n.a+0.1,n.cps||24),done=txt.length===n.text.length;
+      const caret=(!done||Math.floor(t*2)%2===0)&&u<n.b-0.4;
+      tx.innerHTML=esc(txt)+(caret?'<i class="caret"></i>':'');
+      if(u>=n.a)sub=n.text;
+    }
+    const y=n.id==='n3'?n.y-110*ease(lin(u,82.8,83.6)):n.y;
+    el.style.top=y.toFixed(1)+'px';show(el,o,0,8*(1-eo(lin(u,n.a,n.a+.4))));
+  }
+  const mko=env(u,17.5,21.6,.4,.4),mkp=back(lin(u,17.5,18.1));
+  put(st.n2mk,mko,'scale('+(0.5+0.5*mkp).toFixed(3)+') rotate('+(-10*(1-lin(u,17.6,18.2))).toFixed(1)+'deg)');
+  const eao=env(u,80.9,83.4,.4,.5),eap=back(lin(u,80.9,81.5));
+  show(st.endav,eao,0,-24*ease(lin(u,82.9,83.4)),0.6+0.4*eap);
+
+  // tender
+  const to=env(u,5.6,11.2,.7,.5);
+  if(to>0){
+    const te=eo(lin(u,5.6,6.9));
+    put(st.tender,to,'perspective(1600px) translate3d(0,'+(34*(1-te)).toFixed(1)+'px,0) rotateX('+(20*(1-te)).toFixed(2)+'deg) rotateY('+(-16*(1-te)).toFixed(2)+'deg) scale('+(0.9+0.1*te+0.03*ease(lin(u,6.9,11.2))).toFixed(4)+')');
+  }else vis(st.tender,0);
+  marks.forEach(m=>{const p=ease(lin(u,+m.dataset.a,+m.dataset.b));m.style.backgroundSize=(p*100).toFixed(1)+'% 100%';m.style.boxShadow='inset 0 -2px 0 rgba(242,67,90,'+(0.55*p).toFixed(2)+')';});
+
+  // manual search
+  const mo=env(u,11.4,17.6,.6,.5);
+  show(st.mlist,mo,-24*(1-eo(lin(u,11.4,12.1))),0);
+  show(st.mside,mo);
+  if(mo>0){
+    mstats.forEach(s=>{s.style.visibility=u>=+s.dataset.a?'visible':'hidden';});
+    const cur=Math.floor((u-12.0)/0.7);
+    mrows.forEach((r,i)=>{r.style.background=i===cur&&u<17.2?'var(--lav)':'transparent';});
+    const mins=Math.round(290*ease(lin(u,11.8,17.2)));st.clock.textContent=Math.floor(mins/60)+' h '+String(mins%60).padStart(2,'0')+' min';
+    const ap=back(lin(u,11.5,12.1));st.mav.style.transform='scale('+(0.6+0.4*ap).toFixed(3)+')';
+    const mood=u>=13.0?'worried':'neutral';if(mood!==mavMood){mavMood=mood;st.mav.innerHTML=sara(mood);}
+    st.mname.style.opacity=lin(u,11.8,12.1).toFixed(2);
+    const cp=eo(lin(u,11.6,12.2));st.mclock.style.opacity=cp.toFixed(2);st.mclock.style.transform='translateY('+(-12*(1-cp)).toFixed(1)+'px)';
+    ancs.forEach((an,i)=>{const a=+an.dataset.a,p=back(lin(u,a,a+.4)),o=lin(u,a,a+.2);
+      show(an,o,0,(3*Math.sin(t*1.7+i*1.1)),0.6+0.4*p);
+      mlines[i].style.opacity=(0.9*eo(lin(u,a-.1,a+.3))).toFixed(2);mlines[i].style.strokeDashoffset=(-(t*16)%26).toFixed(1);});
+  }
+
+  // app window
+  const wo=env(u,21.4,80.8,.8,.8);
+  if(wo>0)put(st.win,wo,cam(u));else vis(st.win,0);
+  // upload pane
+  show(st['p-up'],env(u,21.4,27.6,.05,.4));
+  const dropped=u>=25.3;
+  st['drop-empty'].style.display=dropped?'none':'grid';st['drop-done'].style.display=dropped?'grid':'none';
+  const over=u>=24.5&&u<25.3;
+  st.drop.style.borderColor=over||dropped?'var(--blue)':'#c9cce6';
+  st.drop.style.background=over?'var(--blueS)':'#fff';
+  // dragged file
+  const [cx,cy]=curPos(u);
+  let fx=1150,fy=470,fo=env(u,22.2,25.5,.4,.3),fs=1;
+  if(u>=23.2){fx=cx;fy=cy;}
+  if(u>=25.2){fs=1-0.5*ease(lin(u,25.2,25.5));}
+  show(st.dfile,fo,fx-125,fy-32+(u<23.2?10*(1-eo(lin(u,22.2,22.6))):0),fs*(u>=23.2&&u<25.2?1.05:1));
+  st.dfile.style.boxShadow=u>=23.2&&u<25.2?'0 26px 50px rgba(30,35,80,.22)':'';
+  // processing pane
+  show(st['p-proc'],env(u,27.4,41.8,.4,.4));
+  if(u>27&&u<42.5){
+    const prog=clamp((u-S0)/(SD*STEPS.length));
+    st.pbar.firstElementChild.style.width=(prog*100).toFixed(1)+'%';
+    STEPS.forEach((s,i)=>{const a=S0+i*SD,b=a+SD;const cls=u>=b?'sdone':u>=a?'son':'';
+      if(psli[i].className!==cls)psli[i].className=cls;
+      psd[i].textContent=u>=b?s[1]:u>=a?'Working…':'Waiting';
+      const pi=psli[i].firstElementChild;pi.style.transform=cls==='son'?'rotate('+((t*360)%360).toFixed(0)+'deg)':'none';});
+    let n=0;while(n<LOG.length&&LOG[n][0]<=u)n++;
+    if(n!==lastLog){lastLog=n;st.plog.innerHTML=LOG.slice(Math.max(0,n-7),n).map(l=>'<div>'+l[1]+'</div>').join('');}
+  }
+  // results pane
+  show(st['p-res'],env(u,41.6,65.0,.4,.4));
+  const swapped=u>=49.0,cp=eo(lin(u,42.2,44.2));
+  const ready=Math.round(9*cp)+(swapped?1:0),chk=Math.round(6*cp),miss=Math.round(5*cp)-(swapped?1:0);
+  st.tv1.textContent=ready+' / 20';st.tv2.textContent=chk;st.tv3.textContent=Math.max(0,miss);
+  st.tv4.textContent=(swapped?16.9:17.1*cp).toFixed(1)+' t';
+  st.tb1.style.width=(ready/20*100)+'%';st.tb2.style.width=(chk/20*100)+'%';st.tb3.style.width=(Math.max(0,miss)/20*100)+'%';
+  st.mcount.textContent=swapped?4:5;
+  st.p05.textContent=swapped?'Ready':'Expired';st.p05.className='pill '+(swapped?'ok':'bad');
+  st.a05t.textContent=swapped?'Changed to the renewed EPD NEPD-DEMO-2207 · valid to 30.09.2031':'NEPD-DEMO-2207, valid to 30.09.2031 · −8% GWP';
+  st.r05l2.textContent=swapped?'Brattli Støtte BS-600 · NEPD-DEMO-2207 · valid to 30.09.2031':'Brattli Støtte BS-600 · NEPD-DEMO-2202 · valid to 31.08.2026';
+  st.b05.style.visibility=swapped?'hidden':'visible';
+  lift(st.b05,u,47.9,48.6,48.8);
+  const fl=swapped?1-lin(u,49.0,50.8):0;
+  st.r05.style.background=fl>0?'color-mix(in srgb,var(--okS) '+(fl*100).toFixed(0)+'%,#fff)':'#fff';
+  st.r05.style.borderColor=fl>0?'color-mix(in srgb,var(--ok) '+(fl*100).toFixed(0)+'%,var(--line))':'var(--line)';
+  const drafted=u>=54.9;st.b14.textContent=drafted?'Request drafted':'Draft supplier request';
+  lift(st.b14,u,53.9,54.6,54.8);
+  const bl=env(u,55.0,62.5,.5,.5);
+  st.resbody.style.filter=bl>0.01?'blur('+(2.6*bl).toFixed(2)+'px)':'none';st.resbody.style.opacity=(1-.3*bl).toFixed(3);
+  const ro=env(u,55.0,62.5,.5,.5);show(st.reqp,ro,30*(1-eo(lin(u,55.0,55.5))),0,0.97+0.03*eo(lin(u,55.0,55.5)));
+  if(ro>0)st.reqtext.textContent=typed(LETTER,u,55.8,92);
+  const dg=env(u,63.4,64.9,.4,.3);
+  st.dlbtn.style.transform=u>=64.2&&u<64.45?'scale(.95)':'translateY('+(-3*dg).toFixed(1)+'px) scale('+(1+0.06*dg).toFixed(3)+')';
+  st.dlbtn.style.boxShadow=dg>0.01?'0 0 0 '+(5*dg).toFixed(1)+'px var(--blueS),0 12px 26px rgba(51,64,168,'+(0.35*dg).toFixed(2)+')':'none';
+  // download pane
+  show(st['p-dl'],env(u,64.8,81,.4,.05));
+  if(u>64.5){
+    const zo=env(u,65.0,99,.5,.1),zp=back(lin(u,65.0,65.6)),zup=ease(lin(u,66.4,67.4));
+    const dim=ease(lin(u,72.8,73.6));
+    show(st.zip,zo*(1-0.75*dim),0,150-130*zup,(0.6+0.4*zp)*(1-0.22*zup));
+    [['f1',154],['f2',434],['f3',714]].forEach(([id,x],i)=>{const el=st[id];el.style.left=(x-125)+'px';
+      const a=67.3+i*.15,p=back(lin(u,a,a+.5));
+      show(el,lin(u,a,a+.25)*(1-0.78*dim),0,18*(1-eo(lin(u,a,a+.5)))+36*dim,(0.8+0.2*p)*(1-0.04*dim));
+      el.style.filter=dim>0.01?'blur('+(2*dim).toFixed(2)+'px)':'none';
+      st['dmp'+i].style.strokeDashoffset=(1-ease(lin(u,66.7+i*.1,67.7+i*.1))).toFixed(3);
+      st['dd'+i].style.opacity=(lin(u,67.6+i*.1,67.8+i*.1)*(1-dim)).toFixed(2);});
+    st.dlines.style.opacity=(1-0.8*dim).toFixed(3);
+    const rpo=eo(lin(u,73.0,74.0));show(st.rep,rpo,0,60*(1-rpo));
+  }
+  // end
+  const ec=eo(lin(u,83.0,84.0));show(st.endc,ec,0,16*(1-ec));
+  if(ec>0){
+    st.eswp.style.strokeDashoffset=(1-ease(lin(u,83.4,84.4))).toFixed(3);
+    const cta=back(lin(u,84.0,84.5));st.ecta.style.opacity=lin(u,84.0,84.2).toFixed(2);st.ecta.style.transform='scale('+(0.6+0.4*cta).toFixed(3)+')';
+  }
+  // captions
+  const c=caption(u);
+  if(c){const o=env(u,c[0],c[1],.25,.3);show(st.cap,o,0,6*(1-eo(lin(u,c[0],c[0]+.3))));const tx=typed(c[2],u,c[0]+.1,40);if(st.capt.textContent!==tx)st.capt.textContent=tx;sub=c[2];}
+  else show(st.cap,0);
+  if(sub!==lastSub){lastSub=sub;$('#subline').textContent=sub;}
+  // cursor
+  const visc=CURVIS.filter(([a,b])=>u>=a&&u<=b);
+  const co=visc.length?Math.min(...visc.map(([a,b])=>env(u,a,b,.3,.3))):0;
+  show(st.cur,co,cx,cy);
+  let ring=0,rs=1;for(const k of CLICKS){if(u>=k&&u<k+.5){const p=lin(u,k,k+.5);ring=(1-p)*.85;rs=.4+1.2*p;}}
+  show(st.ring,ring*co,cx,cy,rs);
+}
+
+// ---------- player ----------
+const screen=$('#screen'),stage=$('#stage');
+function fit(){const w=screen.clientWidth;stage.style.transform='scale('+(w/1280)+')';}
+try{new ResizeObserver(fit).observe(screen);}catch(e){window.addEventListener('resize',fit);}
+fit();
+let t=0,playing=false,raf=0,last=0;
+const fmtT=s=>{s=Math.floor(s);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
+const ICON_PLAY='<path d="M6 4l15 8-15 8z" fill="currentColor"/>',ICON_PAUSE='<path d="M6 4h4v16H6zM14 4h4v16h-4z" fill="currentColor"/>',ICON_REPLAY='<path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" fill="currentColor"/>';
+const chEls=[];
+$('#chapters').innerHTML=CHAPTERS.map((c,i)=>'<li><button class="chap" data-ch="'+i+'"><span>'+fmtT(c[1])+'</span>'+c[0]+'</button></li>').join('');
+document.querySelectorAll('.chap').forEach(b=>chEls.push(b));
+let dragging=false;
+function ui(){
+  $('#time').textContent=fmtT(t)+' / '+fmtT(T);
+  const sc=$('#scrub');if(document.activeElement!==sc||!dragging)sc.value=String(Math.round(t*10));
+  const ended=t>=T;
+  $('#ppi').innerHTML=playing?ICON_PAUSE:(ended?ICON_REPLAY:ICON_PLAY);
+  $('#pp').setAttribute('aria-label',playing?'Pause':ended?'Replay':'Play');
+  $('#bigplay').hidden=playing;
+  $('#bigplay').innerHTML='<svg viewBox="0 0 24 24">'+(ended?ICON_REPLAY:ICON_PLAY)+'</svg>';
+  let ci=0;CHAPTERS.forEach((c,i)=>{if(t>=c[1]-0.01)ci=i;});
+  chEls.forEach((b,i)=>b.setAttribute('aria-current',String(i===ci)));
+}
+let lastUi=0;
+function tick(now){
+  if(!playing)return;
+  t+=Math.min(.1,(now-last)/1000);last=now;
+  if(t>=T){t=T;playing=false;}
+  render(t);if(now-lastUi>200||!playing){ui();lastUi=now;}
+  if(playing)raf=requestAnimationFrame(tick);
+}
+function play(){if(t>=T)t=0;playing=true;last=performance.now();ui();cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);}
+function pause(){playing=false;cancelAnimationFrame(raf);ui();}
+function seek(x){t=clamp(x,0,T);render(t);ui();}
+$('#pp').addEventListener('click',()=>playing?pause():play());
+$('#bigplay').addEventListener('click',e=>{e.stopPropagation();play();});
+screen.addEventListener('click',()=>playing?pause():play());
+const sc=$('#scrub');
+sc.addEventListener('input',()=>{dragging=true;seek(+sc.value/10);});
+sc.addEventListener('change',()=>{dragging=false;});
+$('#chapters').addEventListener('click',e=>{const b=e.target.closest('.chap');if(!b)return;seek(CHAPTERS[+b.dataset.ch][1]);play();});
+document.addEventListener('keydown',e=>{
+  if(e.target.closest&&e.target.closest('input,textarea,button,a,select'))return;
+  if(e.key===' '||e.key==='k'){e.preventDefault();playing?pause():play();}
+  else if(e.key==='ArrowRight'){seek(t+5);}else if(e.key==='ArrowLeft'){seek(t-5);}
+});
+const fsb=$('#fs');
+if(!document.fullscreenEnabled)fsb.hidden=true;
+fsb.addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('#player').requestFullscreen();}catch(e){fsb.hidden=true;}});
+document.addEventListener('fullscreenchange',fit);
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&playing)pause();});
+window.__film={T,render:x=>{t=x;render(x);},pause};
+const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+render(reduce?1.4:0);ui();
+const start=()=>{if(!reduce&&!/[?&]still\b/.test(location.search))play();};
+(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(()=>setTimeout(start,500));
+})();
+</script>
+</body>
+</html>
