@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EPDesk · Customer pilot</title>
+<meta name="description" content="Upload your bill of materials and get an EPD pack, ready to hand in.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect x='2' y='2' width='24' height='24' rx='7' fill='%230061FE'/%3E%3Cpath d='M8 17.5l6 3 6-3M8 13.5l6 3 6-3M8 9.5l6-3 6 3-6 3z' stroke='%23fff' stroke-width='1.6' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preload" href="fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root{
+  --bg:#FFFFFF; --canvas:#F7F5F2; --line:#E7E3DD; --line-strong:#CDC6BC;
+  --fg:#1E1919; --muted:#5F5754; --accent:#0061FE; --accent-hover:#0050D6; --accent-soft:#EBF2FF;
+  --ok:#0A7A48; --ok-soft:#E1F3E9; --warn:#8A5300; --warn-soft:#FFF1D8; --bad:#C3122E; --bad-soft:#FDE8EB;
+  --f-head:"Schibsted Grotesk","Inter Variable","Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-ui:"Inter Variable","Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--fg);font-family:var(--f-ui);font-size:16.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--f-head);margin:0;letter-spacing:-.025em;text-wrap:balance;line-height:1.1}
+h1{font-size:clamp(30px,4.6vw,46px);font-weight:700}
+h2{font-size:clamp(26px,3.6vw,38px);font-weight:700}
+h3{font-size:19px;font-weight:600}
+h1:focus,h2:focus{outline:none}
+p{margin:0}
+a{color:var(--accent)}
+a:hover{color:var(--accent-hover)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+.vh{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+svg{flex:none}
+
+/* header */
+header.top{background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:12px;height:64px}
+.logo{display:flex;align-items:center;gap:9px;color:var(--fg);text-decoration:none;font-family:var(--f-head);font-weight:700;font-size:20px;letter-spacing:-.02em}
+.logo svg{width:28px;height:28px;color:var(--accent)}
+.badge{font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:3px 10px}
+header.top .btn{margin-left:auto}
+header.top .btn .s{display:none}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:0 20px;border-radius:999px;font:inherit;font-weight:600;text-decoration:none;cursor:pointer;border:1px solid transparent;transition:background .15s,border-color .15s}
+.btn.small{min-height:38px;padding:0 16px;font-size:14.5px}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-hover);color:#fff}
+.btn.ghost{background:var(--bg);color:var(--fg);border-color:var(--line-strong)}
+.btn.ghost:hover{border-color:var(--fg);color:var(--fg)}
+.btn small{font-weight:500;opacity:.85;font-size:13.5px}
+button.link{background:none;border:0;padding:0;font:inherit;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+button.link:hover{color:var(--accent-hover)}
+
+/* steps */
+main.wrap{padding-top:28px;padding-bottom:28px}
+.steps{list-style:none;display:flex;gap:8px;padding:0;margin:0 0 30px;flex-wrap:wrap}
+.steps li{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:5px 14px 5px 6px}
+.steps li span{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--canvas);font-size:12.5px}
+.steps li[aria-current="step"]{color:var(--fg);border-color:var(--fg)}
+.steps li[aria-current="step"] span{background:var(--fg);color:#fff}
+.steps li.done span{background:var(--ok);color:#fff}
+.panel{background:var(--bg);border:1px solid var(--line);border-radius:20px;padding:40px}
+
+/* step 1 */
+.lead{font-size:18.5px;color:var(--muted);margin-top:12px;max-width:36em}
+.drop{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:28px;padding:44px 24px;border:2px dashed var(--line-strong);border-radius:16px;background:var(--canvas);text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop:focus-within{outline:3px solid var(--accent);outline-offset:3px}
+.drop svg{width:40px;height:40px;color:var(--accent);margin-bottom:6px}
+.drop b{font-size:19px;font-family:var(--f-head);letter-spacing:-.015em}
+.drop span{color:var(--muted)}
+.drop span u{color:var(--accent);text-underline-offset:3px}
+.drop small{font-size:13.5px;color:var(--muted);margin-top:4px}
+.alt{margin-top:18px;text-align:center}
+.note{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted);text-align:center}
+
+/* step 2 */
+.filechip{display:inline-flex;align-items:center;gap:10px;margin-top:18px;padding:9px 14px;border:1px solid var(--line);border-radius:10px;background:var(--canvas);max-width:100%}
+.filechip svg{width:20px;height:20px;color:var(--muted)}
+.filechip span{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.filechip small{color:var(--muted);white-space:nowrap}
+.bar{height:8px;border-radius:999px;background:var(--canvas);margin-top:28px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:999px;transition:width .5s ease}
+.stages{list-style:none;padding:0;margin:24px 0 0;display:grid;gap:12px}
+.stages li{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:16px}
+.stages li::before{content:"";width:22px;height:22px;border-radius:50%;border:2px solid var(--line-strong);flex:none;box-sizing:border-box}
+.stages li.doing{color:var(--fg);font-weight:600}
+.stages li.doing::before{border-color:var(--accent);border-right-color:transparent;animation:spin .8s linear infinite}
+.stages li.done{color:var(--fg)}
+.stages li.done::before{border:0;background:var(--ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/14px no-repeat}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* step 3 */
+.eyebrow{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+#s-result h2{margin-top:10px}
+#s-result h2 em{font-style:normal;color:var(--accent)}
+.counts{list-style:none;display:flex;flex-wrap:wrap;gap:10px;padding:0;margin:18px 0 0}
+.counts li{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;border-radius:999px;padding:6px 14px}
+.counts li b{font-size:16px}
+.counts .ok{background:var(--ok-soft);color:var(--ok)}
+.counts .warn{background:var(--warn-soft);color:var(--warn)}
+.counts .bad{background:var(--bad-soft);color:var(--bad)}
+.dl{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.dl .btn{min-height:54px}
+.dl svg{width:20px;height:20px}
+.tablewrap{margin-top:30px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+table.res{width:100%;border-collapse:collapse;font-size:15px}
+table.res th{text-align:left;font-size:12.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--canvas);padding:11px 14px;border-bottom:1px solid var(--line)}
+table.res td{padding:13px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+table.res tr:last-child td{border-bottom:0}
+table.res td.n{color:var(--muted);width:1%;font-variant-numeric:tabular-nums}
+table.res td.valid{white-space:nowrap;font-variant-numeric:tabular-nums}
+table.res td.prod{width:30%}
+table.res td.st{width:24%}
+table.res td small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+table.res a.epd{font-weight:600;text-decoration:none}
+table.res a.epd:hover{text-decoration:underline}
+table.res a.epd svg{display:inline-block;width:13px;height:13px;vertical-align:-1px;margin-left:5px}
+table.res .none{color:var(--muted);font-weight:600}
+table.res tr.missing,table.res tr.check{background:#FFFDF9}
+.chip{display:inline-block;font-size:12.5px;font-weight:700;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.chip.ready{background:var(--ok-soft);color:var(--ok)}
+.chip.check{background:var(--warn-soft);color:var(--warn)}
+.chip.missing{background:var(--bad-soft);color:var(--bad)}
+.cta{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-top:30px;padding:26px 28px;border-radius:16px;background:var(--fg);color:#fff}
+.cta p{color:#D9D3CC;margin-top:4px}
+.cta .acts{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.cta button.link{color:#fff}
+
+footer{padding:0 0 40px;font-size:13px;color:var(--muted)}
+footer p{max-width:60em}
+
+@media (max-width:720px){
+  .panel{padding:26px 20px;border-radius:16px}
+  .drop{padding:34px 18px}
+  table.res thead{display:none}
+  table.res,table.res tbody,table.res tr,table.res td{display:block;width:100%}
+  table.res tr{padding:14px 16px;border-bottom:1px solid var(--line)}
+  table.res tr:last-child{border-bottom:0}
+  table.res td{padding:0;border:0}
+  table.res td.n{display:none}
+  table.res td.prod,table.res td.st{width:100%}
+  table.res td.prod{font-weight:600}
+  table.res td.epdc{margin-top:6px}
+  table.res td.valid:not(:empty)::before{content:"Valid until ";color:var(--muted)}
+  table.res td.valid{margin-top:4px;font-size:14px}
+  table.res td.st{margin-top:8px}
+  .dl .btn{width:100%;flex-wrap:wrap;row-gap:2px;padding:12px 20px}
+  .dl .btn small{flex-basis:100%;text-align:center}
+  .steps li{padding-right:12px;font-size:13.5px}
+  header.top .btn .l{display:none}
+  header.top .btn .s{display:inline}
+}
+@media (max-width:420px){header.top .btn{display:none}}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}.stages li.doing::before{animation:none}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="#" aria-label="EPDesk, start over" id="home">
+    <svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="2" y="2" width="24" height="24" rx="7" fill="currentColor"/><path d="M8 17.5l6 3 6-3M8 13.5l6 3 6-3M8 9.5l6-3 6 3-6 3z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>EPDesk</a>
+  <span class="badge">Pilot</span>
+  <a class="btn small primary cta-link" href="#"><span class="l">Get your first pack free</span><span class="s">First pack free</span></a>
+</div></header>
+
+<main class="wrap">
+  <ol class="steps" aria-label="Steps">
+    <li data-step="1" aria-current="step"><span>1</span>Upload</li>
+    <li data-step="2"><span>2</span>Check</li>
+    <li data-step="3"><span>3</span>EPD pack</li>
+  </ol>
+
+  <section id="s-upload" class="panel" aria-labelledby="h-upload">
+    <h1 id="h-upload" tabindex="-1">Find every EPD in your bid</h1>
+    <p class="lead">Upload your bill of materials. We check it and give you an EPD pack, ready to hand in.</p>
+    <label class="drop" id="drop">
+      <input type="file" id="file" class="vh">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M20 16v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3"/></svg>
+      <b>Drop your file here</b>
+      <span>or <u>choose a file</u></span>
+      <small>Excel, CSV, PDF or any other format</small>
+    </label>
+    <p class="alt"><button type="button" class="link" id="sample">No file at hand? Try our sample bid</button></p>
+    <p class="note">This is a pilot. Whatever you upload, you get the same sample result, built from 13 real, published EPDs. Your file stays on your computer.</p>
+  </section>
+
+  <section id="s-check" class="panel" aria-labelledby="h-check" hidden>
+    <h2 id="h-check" tabindex="-1">Checking your file</h2>
+    <div class="filechip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><span id="fname"></span><small id="fsize"></small></div>
+    <div class="bar" id="bar" role="progressbar" aria-label="Progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>
+    <ol class="stages" id="stages">
+      <li>Reading the bill of materials</li>
+      <li>Matching each line to a product</li>
+      <li>Finding the EPDs</li>
+      <li>Checking standard and validity</li>
+      <li>Building your EPD pack</li>
+    </ol>
+    <p class="vh" aria-live="polite" id="live"></p>
+  </section>
+
+  <section id="s-result" class="panel" aria-labelledby="h-result" hidden>
+    <p class="eyebrow" id="proj"></p>
+    <h2 id="h-result" tabindex="-1"></h2>
+    <ul class="counts" id="counts"></ul>
+    <div class="dl">
+      <a class="btn primary" id="dl-pack" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>
+        Download EPD pack <small id="pack-meta"></small></a>
+      <a class="btn ghost" id="dl-xlsx" download>Overview <small id="xlsx-meta"></small></a>
+    </div>
+    <div class="tablewrap">
+      <table class="res">
+        <thead><tr><th>#</th><th>Product in your bid</th><th>EPD</th><th>Valid until</th><th>Status</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <aside class="cta">
+      <div><h3>Want this for your own bid?</h3><p>Send us your bill of materials and the requirements. Your first pack is free.</p></div>
+      <div class="acts"><a class="btn primary cta-link" href="#">Get your first pack free</a><button type="button" class="link" id="again">Check another file</button></div>
+    </aside>
+  </section>
+</main>
+
+<footer><div class="wrap">
+  <p>EPDesk customer pilot. The EPDs are published by Hilti AG through EPD Hub and are shown unchanged. The bid lines are a sample.</p>
+</div></footer>
+
+<script>
+(function(){
+  "use strict";
+  var DATA = {"project": "Sample bid: building B, fire stopping and fixings", "maker": "Hilti AG", "operator": "EPD Hub", "rows": [{"n": 1, "product": "Brannmansjett plastrør, Hilti CP 643 N", "status": "ready", "note": "", "epd": "CP 643 N Firestop Collar", "id": "HUB-6970", "valid": "15.07.2031", "file": "epd/HUB-6970_CP-643-N-Firestop-Collar.pdf"}, {"n": 2, "product": "Brannmansjett plastrør, Hilti CP 644", "status": "ready", "note": "", "epd": "CP 644 Firestop Collar", "id": "HUB-7125", "valid": "04.08.2031", "file": "epd/HUB-7125_CP-644-Firestop-Collar.pdf"}, {"n": 3, "product": "Brannmansjett kabel, Hilti CFS-CC", "status": "ready", "note": "", "epd": "Firestop Cable Collar", "id": "HUB-7039", "valid": "22.07.2031", "file": "epd/HUB-7039_Firestop-Cable-Collar.pdf"}, {"n": 4, "product": "Brannblokk og plugg, Hilti CFS-BL / CFS-PL", "status": "ready", "note": "", "epd": "Firestop Block and Plug CFS-BL / CFS-PL", "id": "HUB-7718", "valid": "02.10.2031", "file": "epd/HUB-7718_Firestop-Block-and-Plug-CFS-BL-CFS-PL.pdf"}, {"n": 5, "product": "Brannfuge topptrack, Hilti CFS-TTS E", "status": "ready", "note": "", "epd": "CFS-TTS E Firestop Top Track Seal", "id": "HUB-7185", "valid": "12.08.2031", "file": "epd/HUB-7185_CFS-TTS-E-Firestop-Top-Track-Seal.pdf"}, {"n": 6, "product": "Brannfuge dekkekant, Hilti CFS-EOS QS", "status": "ready", "note": "", "epd": "CFS-EOS QS Edge of Slab QuickSeal", "id": "HUB-7040", "valid": "22.07.2031", "file": "epd/HUB-7040_CFS-EOS-QS-Edge-of-Slab-QuickSeal.pdf"}, {"n": 7, "product": "Brannfugemasse, Hilti FS-ONE MAX", "status": "check", "note": "This EPD covers the Americas and Canada version. We confirm the European version with Hilti.", "epd": "Firestop Sealant FS One Max (Americas and Canada version)", "id": "HUB-6844", "valid": "29.06.2031", "file": "epd/HUB-6844_Firestop-Sealant-FS-One-Max.pdf"}, {"n": 8, "product": "Injeksjonsmørtel, Hilti HIT-RE 100 HC", "status": "ready", "note": "", "epd": "HIT-RE 100 HC Epoxy Anchor", "id": "HUB-6941", "valid": "09.07.2031", "file": "epd/HUB-6941_HIT-RE-100-HC-Epoxy-Anchor.pdf"}, {"n": 9, "product": "Ekspansjonsanker, Hilti HSA M10", "status": "ready", "note": "", "epd": "Stud anchors HSA, HSA-F and HSV", "id": "HUB-7823", "valid": "15.10.2031", "file": "epd/HUB-7823_Stud-anchors-HSA-HSA-F-and-HSV.pdf"}, {"n": 10, "product": "Rammeplugg stål, Hilti HRD-H 10x80", "status": "ready", "note": "", "epd": "Carbon Steel Frame Anchors HRD", "id": "HUB-7824", "valid": "15.10.2031", "file": "epd/HUB-7824_Carbon-Steel-Frame-Anchors-HRD.pdf"}, {"n": 11, "product": "Rammeplugg rustfri, Hilti HRD-HR 10x80", "status": "ready", "note": "", "epd": "Stainless Steel Frame Anchors HRD", "id": "HUB-7366", "valid": "02.09.2031", "file": "epd/HUB-7366_Stainless-Steel-Frame-Anchors-HRD.pdf"}, {"n": 12, "product": "Avstandskobling, Hilti standoff coupler", "status": "ready", "note": "", "epd": "Standoff Coupler", "id": "HUB-6721", "valid": "18.06.2031", "file": "epd/HUB-6721_Standoff-Coupler.pdf"}, {"n": 13, "product": "Gipsskrue, Hilti", "status": "ready", "note": "", "epd": "Drywall screws", "id": "HUB-7170", "valid": "10.08.2031", "file": "epd/HUB-7170_Drywall-screws.pdf"}, {"n": 14, "product": "Kabelstige 300 mm, varmforsinket", "status": "missing", "note": "No EPD found. We ask the supplier for you."}, {"n": 15, "product": "Koblingsboks IP66, 6 nipler", "status": "missing", "note": "No EPD found. We ask the supplier for you."}], "pack": {"href": "downloads/EPDesk_EPD-pack_sample-bid.zip", "bytes": 10549518}, "xlsx": {"href": "downloads/EPDesk_overview_sample-bid.xlsx", "bytes": 9408}};
+  // Where "Get your first pack free" leads. Point this at the live landing page form at go-live.
+  var CTA_URL = "https://claude.ai/artifact/L9d93PsvLzoxC1DM9je7iM";
+  var STAGE_MS = [900, 1300, 1700, 1200, 900];
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var $ = function(id){ return document.getElementById(id); };
+  var sections = { 1: $("s-upload"), 2: $("s-check"), 3: $("s-result") };
+  var heads = { 1: $("h-upload"), 2: $("h-check"), 3: $("h-result") };
+  var timers = [];
+
+  document.querySelectorAll(".cta-link").forEach(function(a){ a.href = CTA_URL; });
+
+  function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function nb(s){ return esc(s).replace(/-/g, "\u2011"); }
+  // keep the link icon on the same line as the last word of the title
+  function glue(html, icon){ var i = html.lastIndexOf(" "); return i < 0 ? '<span style="white-space:nowrap">' + html + icon + '</span>' : html.slice(0, i + 1) + '<span style="white-space:nowrap">' + html.slice(i + 1) + icon + '</span>'; }
+  function size(b){
+    if (b < 1024) return b + " B";
+    if (b < 1048576) return Math.round(b / 1024) + " KB";
+    return (b / 1048576).toFixed(b < 10485760 ? 1 : 0) + " MB";
+  }
+
+  function show(step){
+    [1,2,3].forEach(function(s){
+      sections[s].hidden = s !== step;
+      var li = document.querySelector('.steps li[data-step="' + s + '"]');
+      if (s === step) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current");
+      li.classList.toggle("done", s < step);
+    });
+    window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+    heads[step].focus({ preventScroll: true });
+  }
+
+  function reset(){
+    timers.forEach(clearTimeout); timers = [];
+    $("file").value = "";
+    show(1);
+  }
+
+  function start(name, bytes){
+    timers.forEach(clearTimeout); timers = [];
+    $("fname").textContent = name || "Your file";
+    $("fsize").textContent = typeof bytes === "number" ? size(bytes) : "";
+    var items = Array.prototype.slice.call(document.querySelectorAll("#stages li"));
+    items.forEach(function(li){ li.className = ""; });
+    var bar = $("bar"); bar.querySelector("i").style.width = "0%"; bar.setAttribute("aria-valuenow", "0");
+    show(2);
+
+    var t = 0, total = items.length;
+    items.forEach(function(li, i){
+      var d = reduce ? 250 : STAGE_MS[i];
+      timers.push(setTimeout(function(){
+        li.className = "doing";
+        $("live").textContent = li.textContent;
+      }, t));
+      t += d;
+      timers.push(setTimeout(function(){
+        li.className = "done";
+        var pct = Math.round((i + 1) / total * 100);
+        bar.querySelector("i").style.width = pct + "%";
+        bar.setAttribute("aria-valuenow", String(pct));
+      }, t));
+    });
+    timers.push(setTimeout(result, t + (reduce ? 100 : 450)));
+  }
+
+  function result(){
+    var rows = DATA.rows;
+    var ready = rows.filter(function(r){ return r.status === "ready"; }).length;
+    var check = rows.filter(function(r){ return r.status === "check"; }).length;
+    var missing = rows.filter(function(r){ return r.status === "missing"; }).length;
+    var found = ready + check;
+
+    $("proj").textContent = DATA.project;
+    $("h-result").innerHTML = "<em>" + found + " of " + rows.length + "</em> products have an EPD";
+    $("counts").innerHTML =
+      '<li class="ok"><b>' + ready + '</b> ready to hand in</li>' +
+      (check ? '<li class="warn"><b>' + check + '</b> to check</li>' : "") +
+      (missing ? '<li class="bad"><b>' + missing + '</b> requested from suppliers</li>' : "");
+
+    $("dl-pack").href = DATA.pack.href;
+    $("pack-meta").textContent = ".zip · " + found + " EPDs and the overview · " + size(DATA.pack.bytes);
+    $("dl-xlsx").href = DATA.xlsx.href;
+    $("xlsx-meta").textContent = ".xlsx · " + size(DATA.xlsx.bytes);
+
+    var ext = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+    var label = { ready: "Ready", check: "Check", missing: "Missing" };
+    $("rows").innerHTML = rows.map(function(r){
+      var epd = r.file
+        ? '<a class="epd" href="' + esc(r.file) + '" target="_blank" rel="noopener" title="Open the EPD (PDF)">' + glue(nb(r.epd), ext) + '</a>' +
+          '<small>' + esc(DATA.maker) + ' · ' + esc(DATA.operator) + ' ' + esc(r.id) + '</small>'
+        : '<span class="none">Not found</span>';
+      var note = r.note ? "<small>" + esc(r.note) + "</small>" : "";
+      return '<tr class="' + r.status + '">' +
+        '<td class="n">' + r.n + '</td>' +
+        '<td class="prod">' + nb(r.product) + '</td>' +
+        '<td class="epdc">' + epd + '</td>' +
+        '<td class="valid">' + esc(r.valid || "") + '</td>' +
+        '<td class="st"><span class="chip ' + r.status + '">' + label[r.status] + '</span>' + note + '</td>' +
+        '</tr>';
+    }).join("");
+    show(3);
+  }
+
+  // any file is accepted and handled the same way
+  $("file").addEventListener("change", function(e){
+    var f = e.target.files && e.target.files[0];
+    if (f) start(f.name, f.size);
+  });
+  var drop = $("drop");
+  ["dragenter","dragover"].forEach(function(ev){
+    drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add("over"); });
+  });
+  ["dragleave","dragend"].forEach(function(ev){
+    drop.addEventListener(ev, function(){ drop.classList.remove("over"); });
+  });
+  drop.addEventListener("drop", function(e){
+    e.preventDefault(); drop.classList.remove("over");
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    start(f ? f.name : "Your file", f ? f.size : undefined);
+  });
+  // stop a file dropped beside the drop zone from opening in the browser
+  window.addEventListener("dragover", function(e){ e.preventDefault(); });
+  window.addEventListener("drop", function(e){ e.preventDefault(); });
+
+  $("sample").addEventListener("click", function(){ start("Sample_bid_building_B.xlsx", 18432); });
+  $("again").addEventListener("click", reset);
+  $("home").addEventListener("click", function(e){ e.preventDefault(); reset(); });
+})();
+</script>
+</body>
+</html>
